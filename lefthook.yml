@@ -8,7 +8,12 @@ pre-commit:
   commands:
     gitleaks:
       # Scan only staged changes; cheap enough to run on every commit.
-      run: gitleaks protect --staged --redact --config .gitleaks.toml
+      # Prefer the per-developer personal config when present (it extends
+      # the shared .gitleaks.toml).
+      run: |
+        cfg=.gitleaks.toml
+        [ -f .gitleaks-local.toml ] && cfg=.gitleaks-local.toml
+        gitleaks protect --staged --redact --config "$cfg"
 
 pre-push:
   parallel: true
@@ -22,7 +27,10 @@ pre-push:
     gitleaks:
       # Belt-and-braces: scan the commits being pushed in case the
       # pre-commit hook was bypassed.
-      run: gitleaks detect --log-opts="@{upstream}..HEAD" --redact --config .gitleaks.toml
+      run: |
+        cfg=.gitleaks.toml
+        [ -f .gitleaks-local.toml ] && cfg=.gitleaks-local.toml
+        gitleaks detect --log-opts="@{upstream}..HEAD" --redact --config "$cfg"
     debt-scan:
       # Report-only for now (`|| true`): never block a push.
       # Run gate so any baseline regression shows up in the terminal

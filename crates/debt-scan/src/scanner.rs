@@ -55,13 +55,50 @@ fn is_self_reference(rel: &Path) -> bool {
         || s == ".gitleaks.toml"
 }
 
+/// Read the comma-separated `DEBT_SCAN_PERSONAL_NAMES` env var and return
+/// the lowercased entries. Empty / unset → no personal-path detection.
+///
+/// This keeps personally-identifying strings (developer usernames, real
+/// names) out of committed code. Each developer can opt in locally by
+/// exporting e.g. `DEBT_SCAN_PERSONAL_NAMES=alice,a-bot`.
+#[must_use]
+pub fn personal_names_from_env() -> Vec<String> {
+    std::env::var("DEBT_SCAN_PERSONAL_NAMES")
+        .ok()
+        .map(|s| {
+            s.split(',')
+                .map(|p| p.trim().to_lowercase())
+                .filter(|p| !p.is_empty())
+                .collect()
+        })
+        .unwrap_or_default()
+}
+
 /// Run the scan rooted at `root` and return a category -> count map.
+///
+/// Personal-path detection is opt-in via the `DEBT_SCAN_PERSONAL_NAMES`
+/// env var; without it the `personal-windows-path` count stays at zero.
 ///
 /// # Errors
 ///
 /// Returns an error if a Cargo manifest can't be read while counting
 /// external dependencies.
 pub fn scan(root: &Path) -> Result<BTreeMap<String, u64>> {
+    let personal_names = personal_names_from_env();
+    scan_with_personal_names(root, &personal_names)
+}
+
+/// Same as [`scan`] but takes the personal-names list explicitly. Useful
+/// for tests; production callers should use [`scan`].
+///
+/// # Errors
+///
+/// Returns an error if a Cargo manifest can't be read while counting
+/// external dependencies.
+pub fn scan_with_personal_names(
+    root: &Path,
+    personal_names: &[String],
+) -> Result<BTreeMap<String, u64>> {
     let mut counts: BTreeMap<String, u64> =
         CATEGORIES.iter().map(|c| ((*c).to_string(), 0)).collect();
 
@@ -91,7 +128,7 @@ pub fn scan(root: &Path) -> Result<BTreeMap<String, u64>> {
         }
 
         for (idx, line) in text.lines().enumerate() {
-            scan_line(rel, idx, line, ext, &mut counts);
+            scan_line(rel, idx, line, ext, personal_names, &mut counts);
         }
     }
 
@@ -149,6 +186,7 @@ fn scan_line(
     _line_no: usize,
     line: &str,
     ext: &str,
+    personal_names: &[String],
     counts: &mut BTreeMap<String, u64>,
 ) {
     let is_rust = ext == "rs";
@@ -180,11 +218,18 @@ fn scan_line(
         }
     }
 
-    // Personal Windows path — matches both C:\Users\hiroki\ and forward-slash
-    // variants. We skip the SKILL.md files because they cite paths in prose
-    // and these are already gitleaks territory.
-    if line.contains("C:\\Users\\hiroki") || line.contains("C:/Users/hiroki") {
-        *counts.get_mut("personal-windows-path").unwrap() += 1;
+    // Personal Windows path — matches both `C:\Users\<name>\` and the
+    // forward-slash variant, for every name listed in
+    // `DEBT_SCAN_PERSONAL_NAMES`. With no names configured the check is
+    // a no-op, which is the right default for a public repo.
+    let line_lower = line.to_lowercase();
+    for name in personal_names {
+        let win = format!("c:\\users\\{name}");
+        let unix = format!("c:/users/{name}");
+        if line_lower.contains(&win) || line_lower.contains(&unix) {
+            *counts.get_mut("personal-windows-path").unwrap() += 1;
+            break;
+        }
     }
 }
 
@@ -238,6 +283,12 @@ mod tests {
         CATEGORIES.iter().map(|c| ((*c).to_string(), 0)).collect()
     }
 
+    const NO_NAMES: &[String] = &[];
+
+    fn names(vs: &[&str]) -> Vec<String> {
+        vs.iter().map(|s| (*s).to_string()).collect()
+    }
+
     #[test]
     fn detects_todo_marker_in_rust() {
         let mut c = counts();
@@ -246,6 +297,7 @@ mod tests {
             0,
             "// TODO: implement parser",
             "rs",
+            NO_NAMES,
             &mut c,
         );
         assert_eq!(c["todo-fixme"], 1);
@@ -259,6 +311,7 @@ mod tests {
             0,
             "## TODO checklist",
             "md",
+            NO_NAMES,
             &mut c,
         );
         assert_eq!(c["todo-fixme"], 0);
@@ -272,6 +325,7 @@ mod tests {
             0,
             "    #[allow(dead_code)]",
             "rs",
+            NO_NAMES,
             &mut c,
         );
         assert_eq!(c["allow-dead-code"], 1);
@@ -283,23 +337,39 @@ mod tests {
         scan_line(
             Path::new("crates/editor-core/tests/roundtrip.rs"),
             0,
-            "#[ignore = \"M0: 実装は M2\"]",
+            r#"#[ignore = "scaffold"]"#,
             "rs",
+            NO_NAMES,
             &mut c,
         );
         assert_eq!(c["ignored-tests"], 1);
     }
 
     #[test]
-    fn detects_personal_path() {
+    fn detects_personal_path_when_name_configured() {
         let mut c = counts();
         scan_line(
             Path::new("crates/editor-ui/src/main.rs"),
             0,
-            r#"let p = "C:\Users\hiroki\code\editor";"#,
+            r#"let p = "C:\Users\alice\code\editor";"#,
             "rs",
+            &names(&["alice"]),
             &mut c,
         );
         assert_eq!(c["personal-windows-path"], 1);
+    }
+
+    #[test]
+    fn ignores_personal_path_when_no_names_configured() {
+        let mut c = counts();
+        scan_line(
+            Path::new("crates/editor-ui/src/main.rs"),
+            0,
+            r#"let p = "C:\Users\alice\code\editor";"#,
+            "rs",
+            NO_NAMES,
+            &mut c,
+        );
+        assert_eq!(c["personal-windows-path"], 0);
     }
 }

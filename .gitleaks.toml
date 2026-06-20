@@ -1,8 +1,14 @@
 # gitleaks configuration. https://github.com/gitleaks/gitleaks
 #
 # This extends the built-in ruleset (≈150 patterns for API keys, tokens,
-# private keys, etc.) with a small set of project-specific patterns that
-# catch personal information accidentally pasted into commits.
+# private keys, etc.) with a handful of patterns that catch personally
+# identifying material accidentally committed by anyone working on the
+# project.
+#
+# For patterns that are specific to your own identity (your developer
+# username, full name, personal email), create a gitignored
+# `.gitleaks-local.toml` and invoke gitleaks with
+# `--config .gitleaks-local.toml`. See CONTRIBUTING.md.
 #
 # Run locally with:
 #   gitleaks detect --source . --log-opts="--all"
@@ -13,67 +19,30 @@ title = "editor gitleaks config"
 useDefault = true
 
 # ─────────────────────────────────────────────────────────────────────────
-# Personal information patterns
-# These should never appear in the repository except in clearly-intended
-# spots (license, code of conduct contact, etc.).
+# Generic identity / credential patterns
+# These apply to every developer and should never appear in commits.
 # ─────────────────────────────────────────────────────────────────────────
 
 [[rules]]
-id = "personal-windows-userdir"
-description = "Windows user directory path (C:/Users/hiroki/ or variants)"
-regex = '''(?i)[a-z]:[/\\]+Users[/\\]+hiroki'''
-tags = ["personal", "path"]
-[rules.allowlist]
-description = "debt-scan and gitleaks define the pattern they hunt for"
-paths = [
-    '''crates/debt-scan/src/scanner\.rs''',
-]
-
-[[rules]]
-id = "personal-msys-userdir"
-description = "MSYS/Git Bash style user directory (/c/Users/hiroki/ or /home/hiroki/)"
-regex = '''(?i)/(?:c/Users|home)/hiroki(?:[/\s"']|$)'''
-tags = ["personal", "path"]
-
-[[rules]]
-id = "personal-email"
-description = "Personal email address — should only appear in CODE_OF_CONDUCT.md"
-regex = '''hiroki\.sato1\.work@gmail\.com'''
-tags = ["personal", "pii"]
-[rules.allowlist]
-paths = ['''CODE_OF_CONDUCT\.md''']
-
-[[rules]]
-id = "personal-fullname"
-description = "Personal full name in either order, English or Japanese"
-regex = '''(?i)(hiroki\s+sato|sato\s+hiroki|佐藤\s*浩樹)'''
-tags = ["personal", "pii"]
-[rules.allowlist]
-paths = ['''LICENSE''']
-
-[[rules]]
-id = "personal-anthropic-org-id"
-description = "Anthropic Console organization ID (org-…) — never commit"
+id = "anthropic-org-id"
+description = "Anthropic Console organization ID (org-…)"
 regex = '''\borg-[A-Za-z0-9]{16,}\b'''
-tags = ["personal", "key"]
+tags = ["identity", "key"]
 
 [[rules]]
-id = "personal-openai-org-id"
+id = "openai-org-id"
 description = "OpenAI organization ID (org-…)"
 regex = '''\borg-[A-Za-z0-9]{20,}\b'''
-tags = ["personal", "key"]
+tags = ["identity", "key"]
 
 [[rules]]
-id = "personal-ssh-fingerprint"
-description = "SSH key fingerprint (SHA256:…) — leaks identity"
+id = "ssh-fingerprint"
+description = "SSH key fingerprint (SHA256:…) — identifies an individual"
 regex = '''SHA256:[A-Za-z0-9+/]{43}'''
-tags = ["personal", "key"]
+tags = ["identity", "key"]
 
 # ─────────────────────────────────────────────────────────────────────────
 # Global allowlist
-# Paths under .skillshare/ link out to the source-of-truth skill files,
-# which can incidentally mention paths or tools. Lint them once on
-# authorship; do not re-scan symlink targets.
 # ─────────────────────────────────────────────────────────────────────────
 
 [allowlist]

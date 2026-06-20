@@ -78,12 +78,34 @@ disclosed**.
   `commit-msg` checks the Conventional Commits format. Install with
   `lefthook install`.
 - [`.gitleaks.toml`](.gitleaks.toml) — Secret-scanning rules: the
-  default ~150 patterns plus a handful of patterns that catch personal
-  information (paths, emails). Run a full-history scan with
-  `gitleaks detect --source . --log-opts="--all"`.
+  default ~150 patterns plus a handful of generic identity patterns
+  (Anthropic / OpenAI org IDs, SSH key fingerprints). Run a
+  full-history scan with `gitleaks detect --source . --log-opts="--all"`.
 
 Per-tool personal areas (`.claude/`, `.cursor/`, `.codex/`, `.gemini/`)
 are gitignored as developer-local.
+
+### Local personal patterns (opt-in)
+
+If you want gitleaks and `debt-scan` to also flag your own personally
+identifying strings (developer username, real name, personal email),
+opt in locally without touching committed files:
+
+- **gitleaks**: copy the structure of `.gitleaks-local.toml` (already
+  gitignored — see [`.gitignore`](.gitignore)) and adapt the patterns
+  to your own identity. The shared lefthook hook auto-detects this
+  file and uses it instead of `.gitleaks.toml` when present.
+- **debt-scan**: export `DEBT_SCAN_PERSONAL_NAMES` as a comma-separated
+  list of lowercase usernames you want to catch. With no value set the
+  `personal-windows-path` count stays at zero.
+
+  ```sh
+  export DEBT_SCAN_PERSONAL_NAMES=alice
+  cargo run -p debt-scan -- scan
+  ```
+
+Neither hook commits your name or email into the repo — they only
+make the local checks louder for you.
 
 ## 技術的負債
 

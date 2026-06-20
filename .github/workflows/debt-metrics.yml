@@ -7,8 +7,8 @@ on:
     branches: [main]
 
 jobs:
-  measure:
-    name: measure
+  scan:
+    name: scan
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -21,52 +21,29 @@ jobs:
 
       - uses: Swatinem/rust-cache@v2
 
-      - name: Compute metrics
-        id: metrics
+      - name: Run debt-scan gate (report-only — never fails the job)
+        run: cargo run -p debt-scan --quiet -- gate || true
+
+      - name: Build PR comment body
+        id: body
+        if: github.event_name == 'pull_request'
         run: |
-          set -euo pipefail
-
-          rust_loc=$(find crates/ -name "*.rs" -exec wc -l {} + | tail -1 | awk '{print $1}')
-          external_deps=$(grep -E '^[a-z0-9_-]+ = ' crates/*/Cargo.toml | grep -v 'path =' | grep -v 'workspace' | grep -cv 'publish\|version\|name\|edition\|license' || true)
-          path_deps=$(grep -rEh 'path = "' crates/*/Cargo.toml | wc -l)
-          todos=$(grep -rnE 'TODO|FIXME|XXX' crates/ docs/ --include="*.rs" --include="*.md" | wc -l || true)
-          dead_code=$(grep -rn 'allow(dead_code)' crates/ --include="*.rs" | wc -l || true)
-          ignored=$(grep -rn '#\[ignore' crates/ --include="*.rs" | wc -l || true)
-
-          clippy_warnings=$(cargo clippy --workspace --all-targets 2>&1 | grep -cE '^warning:' || true)
-
-          test_output=$(cargo test --workspace 2>&1 || true)
-          passed=$(echo "$test_output" | grep -E '^test result' | awk -F'[. ]+' '{sum+=$4} END {print sum+0}')
-          failed=$(echo "$test_output" | grep -E '^test result' | awk -F'[. ]+' '{sum+=$6} END {print sum+0}')
-          ignored_run=$(echo "$test_output" | grep -E '^test result' | awk -F'[. ]+' '{sum+=$8} END {print sum+0}')
-
           {
-            echo "## Current values (commit \`${GITHUB_SHA::7}\`)"
-            echo ""
-            echo "| Metric | Value | Baseline |"
-            echo "|--------|------:|---------:|"
-            echo "| Rust LOC                       | ${rust_loc} | 193 |"
-            echo "| External cargo dependencies    | ${external_deps} | 0 |"
-            echo "| Workspace internal path deps   | ${path_deps} | 4 |"
-            echo "| clippy warnings                | ${clippy_warnings} | 0 |"
-            echo "| TODO / FIXME / XXX             | ${todos} | 0 |"
-            echo "| #[allow(dead_code)]            | ${dead_code} | 0 |"
-            echo "| Tests passing                  | ${passed} | 0 |"
-            echo "| Tests #[ignore]                | ${ignored} (decl), ${ignored_run} (run) | 5 |"
-            echo "| Tests failing                  | ${failed} | 0 |"
-            echo ""
-            echo "_Baseline is the M0.7 snapshot in [\`docs/debt.md\`](../blob/main/docs/debt.md). Increase is not automatically bad — but unexplained increase is._"
-          } | tee metrics.md
-
+            echo "## debt-scan (commit \`${GITHUB_SHA::7}\`)"
+            echo
+            cat reports/debt/latest.md
+            echo
+            echo "_Baseline lives in [\`docs/debt/baseline.json\`](../blob/main/docs/debt/baseline.json). Gate is currently report-only._"
+          } > body.md
           {
-            echo 'metrics<<METRICS_EOF'
-            cat metrics.md
-            echo 'METRICS_EOF'
+            echo 'body<<BODY_EOF'
+            cat body.md
+            echo 'BODY_EOF'
           } >> "$GITHUB_OUTPUT"
 
-      - name: Post metrics comment on PR
+      - name: Post sticky comment
         if: github.event_name == 'pull_request'
         uses: marocchino/sticky-pull-request-comment@v2
         with:
           header: debt-metrics
-          message: ${{ steps.metrics.outputs.metrics }}
+          message: ${{ steps.body.outputs.body }}

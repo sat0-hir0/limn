@@ -23,6 +23,11 @@ pre-push:
       # Belt-and-braces: scan the commits being pushed in case the
       # pre-commit hook was bypassed.
       run: gitleaks detect --log-opts="@{upstream}..HEAD" --redact --config .gitleaks.toml
+    debt-scan:
+      # Report-only for now (`|| true`): never block a push.
+      # Run gate so any baseline regression shows up in the terminal
+      # before CI catches it.
+      run: cargo run -p debt-scan --quiet -- gate || true
 
 commit-msg:
   commands:

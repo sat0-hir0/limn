@@ -23,6 +23,11 @@ id = "personal-windows-userdir"
 description = "Windows user directory path (C:/Users/hiroki/ or variants)"
 regex = '''(?i)[a-z]:[/\\]+Users[/\\]+hiroki'''
 tags = ["personal", "path"]
+[rules.allowlist]
+description = "debt-scan and gitleaks define the pattern they hunt for"
+paths = [
+    '''crates/debt-scan/src/scanner\.rs''',
+]
 
 [[rules]]
 id = "personal-msys-userdir"

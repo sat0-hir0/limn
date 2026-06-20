@@ -88,14 +88,15 @@ are gitignored as developer-local.
 ## 技術的負債
 
 未完了のままマージしたコードや、後で直すと決めたショートカットは
-[`docs/debt.md`](docs/debt.md) に書く。**解消条件 (どうなったら直すか) を必ず書くこと。**
-書かないとただの愚痴になる。
+[`docs/debt/dashboard.md`](docs/debt/dashboard.md) に書く。
+**解消条件 (どうなったら直すか) を必ず書くこと。** 書かないとただの愚痴になる。
 
-- 単一ファイルで完結する負債 → `docs/debt.md` の Open debt に追記
+- 単一ファイルで完結する負債 → `docs/debt/dashboard.md` の Open debt に追記
 - 設計判断 or 複数ファイル横断 → GitHub Issue に `tech-debt` label を付けて立てる
-- ベースライン値は CI が `docs/debt.md` のメトリクスを再計測する。
-  値が増えたからといって自動 fail はしない (= 当面は report-only)
-  が、説明なく増えたら PR レビューで止める
+- 機械計測値は [`debt-scan`](crates/debt-scan/) クレートが扱う。
+  `cargo run -p debt-scan -- scan` で計測、`-- gate` で baseline 比較。
+  CI が PR コメントに差分を出すので、増えたら理由を書くこと。
+  当面は **report-only** (= 自動 fail なし) でスタート。
 
 ## 設計ドキュメント
 

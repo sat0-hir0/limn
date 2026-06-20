@@ -4,6 +4,7 @@ members = [
     "crates/editor-core",
     "crates/editor-service",
     "crates/editor-ui",
+    "crates/debt-scan",
 ]
 
 [workspace.package]

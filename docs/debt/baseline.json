@@ -1,0 +1,11 @@
+{
+  "counts": {
+    "allow-dead-code": 0,
+    "external-deps": 0,
+    "ignored-tests": 5,
+    "personal-windows-path": 0,
+    "rust-loc": 193,
+    "todo-fixme": 0,
+    "unsafe-blocks": 0
+  }
+}

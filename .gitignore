@@ -2,6 +2,9 @@
 /target/
 **/*.rs.bk
 
+# debt-scan generated reports
+/reports/
+
 # IDE / editor
 .idea/
 .vscode/

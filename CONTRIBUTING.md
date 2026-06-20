@@ -72,9 +72,15 @@ disclosed**.
 - [`.skillshare/`](.skillshare/) — project-scoped skills managed by
   [skillshare](https://github.com/runkids/skillshare). Run
   `skillshare sync` once to install them into your AI tool of choice.
-- [`lefthook.yml`](lefthook.yml) — Git hooks: `pre-push` runs
-  `cargo fmt --check / clippy -D / test`, `commit-msg` checks the
-  Conventional Commits format. Install with `lefthook install`.
+- [`lefthook.yml`](lefthook.yml) — Git hooks: `pre-commit` runs
+  `gitleaks` over the staged diff; `pre-push` runs
+  `cargo fmt --check / clippy -D / test` plus a second `gitleaks` sweep;
+  `commit-msg` checks the Conventional Commits format. Install with
+  `lefthook install`.
+- [`.gitleaks.toml`](.gitleaks.toml) — Secret-scanning rules: the
+  default ~150 patterns plus a handful of patterns that catch personal
+  information (paths, emails). Run a full-history scan with
+  `gitleaks detect --source . --log-opts="--all"`.
 
 Per-tool personal areas (`.claude/`, `.cursor/`, `.codex/`, `.gemini/`)
 are gitignored as developer-local.

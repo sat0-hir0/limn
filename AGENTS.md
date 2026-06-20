@@ -55,9 +55,13 @@ is **optional** and **not required to be disclosed**.
   ([skillshare](https://github.com/runkids/skillshare) is the sync tool).
   Run `skillshare sync` once to install them into your tool of choice
   (Claude Code, Codex, Cursor, etc.).
-- **Hooks**: `lefthook.yml` runs `fmt --check / clippy -D / test` on
-  `pre-push` and a Conventional Commits format check on `commit-msg`.
+- **Hooks**: `lefthook.yml` runs `gitleaks` on `pre-commit`,
+  `fmt --check / clippy -D / test` plus a second `gitleaks` sweep on
+  `pre-push`, and a Conventional Commits format check on `commit-msg`.
   Install with `lefthook install`.
+- **Secret scanning**: `gitleaks` (configured in `.gitleaks.toml`)
+  guards against API keys and personal information leaking into
+  commits. CI re-runs the scan as a backstop.
 - **Claude Code**: reads `CLAUDE.md`, which is a one-line import of this
   file (`@AGENTS.md`). This is the Anthropic-recommended workaround
   while native `AGENTS.md` support lands.

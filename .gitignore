@@ -21,3 +21,12 @@ Thumbs.db
 
 # lefthook local override (per-developer)
 lefthook-local.yml
+
+# Secrets / credentials. gitleaks catches accidental leaks at commit time,
+# but ignoring these patterns is the first line of defence.
+.env
+.env.*
+!.env.example
+*.secret
+*.secrets
+secrets/

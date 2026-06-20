@@ -3,6 +3,13 @@
 # After cloning, run `lefthook install` once to wire these into
 # .git/hooks/. Hooks run automatically thereafter.
 
+pre-commit:
+  parallel: true
+  commands:
+    gitleaks:
+      # Scan only staged changes; cheap enough to run on every commit.
+      run: gitleaks protect --staged --redact --config .gitleaks.toml
+
 pre-push:
   parallel: true
   commands:
@@ -12,6 +19,10 @@ pre-push:
       run: cargo clippy --workspace --all-targets -- -D warnings
     test:
       run: cargo test --workspace
+    gitleaks:
+      # Belt-and-braces: scan the commits being pushed in case the
+      # pre-commit hook was bypassed.
+      run: gitleaks detect --log-opts="@{upstream}..HEAD" --redact --config .gitleaks.toml
 
 commit-msg:
   commands:

@@ -85,6 +85,18 @@ disclosed**.
 Per-tool personal areas (`.claude/`, `.cursor/`, `.codex/`, `.gemini/`)
 are gitignored as developer-local.
 
+## 技術的負債
+
+未完了のままマージしたコードや、後で直すと決めたショートカットは
+[`docs/debt.md`](docs/debt.md) に書く。**解消条件 (どうなったら直すか) を必ず書くこと。**
+書かないとただの愚痴になる。
+
+- 単一ファイルで完結する負債 → `docs/debt.md` の Open debt に追記
+- 設計判断 or 複数ファイル横断 → GitHub Issue に `tech-debt` label を付けて立てる
+- ベースライン値は CI が `docs/debt.md` のメトリクスを再計測する。
+  値が増えたからといって自動 fail はしない (= 当面は report-only)
+  が、説明なく増えたら PR レビューで止める
+
 ## 設計ドキュメント
 
 着手前に [docs/spec-handoff-gpui.md](docs/spec-handoff-gpui.md) と [docs/testing-strategy.md](docs/testing-strategy.md) を読む。

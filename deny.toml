@@ -14,10 +14,17 @@ allow = [
     "MPL-2.0",
 ]
 confidence-threshold = 0.93
+# Stay green when an allowed license is not used by any dep yet (M0 has
+# no external deps; the allow list is forward-looking for M1+).
+unused-allowed-license = "allow"
 
 [bans]
 multiple-versions = "warn"
 wildcards = "deny"
+# Workspace-internal `path = "..."` deps look like wildcard versions
+# but are fine — they always resolve locally. External wildcard
+# `version = "*"` deps are still denied.
+allow-wildcard-paths = true
 
 [advisories]
 yanked = "warn"

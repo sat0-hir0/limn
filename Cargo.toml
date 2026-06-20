@@ -7,7 +7,10 @@ members = [
 ]
 
 [workspace.package]
-version = "0.0.0"
+# version intentionally NOT here: release-please's cargo-workspace plugin
+# does not understand `version.workspace = true` inheritance and bails on
+# "invalid [package.version]". Each crate sets its own version directly;
+# release-please keeps them in lockstep via `cargo-workspace.merge = true`.
 edition = "2021"
 license = "Apache-2.0"
 repository = "https://github.com/sat0-hir0/editor"

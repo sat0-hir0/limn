@@ -61,6 +61,24 @@ BREAKING CHANGE: `Block::new` now requires a parent reference.
 
 人間が編集しないこと (release-please が PR で更新する)。
 
+## AI tooling (optional)
+
+This repo ships with vendor-neutral AI development scaffolding. Using any of
+it (or any specific tool) is **optional** and **not required to be
+disclosed**.
+
+- [`AGENTS.md`](AGENTS.md) — onboarding context readable by Claude Code,
+  Codex, Cursor, Gemini CLI, GitHub Copilot, and others.
+- [`.skillshare/`](.skillshare/) — project-scoped skills managed by
+  [skillshare](https://github.com/runkids/skillshare). Run
+  `skillshare sync` once to install them into your AI tool of choice.
+- [`lefthook.yml`](lefthook.yml) — Git hooks: `pre-push` runs
+  `cargo fmt --check / clippy -D / test`, `commit-msg` checks the
+  Conventional Commits format. Install with `lefthook install`.
+
+Per-tool personal areas (`.claude/`, `.cursor/`, `.codex/`, `.gemini/`)
+are gitignored as developer-local.
+
 ## 設計ドキュメント
 
 着手前に [docs/spec-handoff-gpui.md](docs/spec-handoff-gpui.md) と [docs/testing-strategy.md](docs/testing-strategy.md) を読む。

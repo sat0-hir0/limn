@@ -10,3 +10,14 @@
 # OS
 .DS_Store
 Thumbs.db
+
+# AI tool personal areas (synced by skillshare or local tool setup)
+# The vendor-neutral source of truth lives under .skillshare/.
+.claude/
+.cursor/
+.codex/
+.gemini/
+.agents/
+
+# lefthook local override (per-developer)
+lefthook-local.yml

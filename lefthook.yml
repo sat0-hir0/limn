@@ -1,0 +1,23 @@
+# lefthook configuration. https://lefthook.dev
+#
+# After cloning, run `lefthook install` once to wire these into
+# .git/hooks/. Hooks run automatically thereafter.
+
+pre-push:
+  parallel: true
+  commands:
+    fmt-check:
+      run: cargo fmt --all -- --check
+    clippy:
+      run: cargo clippy --workspace --all-targets -- -D warnings
+    test:
+      run: cargo test --workspace
+
+commit-msg:
+  commands:
+    conventional-commits:
+      # Verify the first line of the commit message matches Conventional Commits.
+      # release-please consumes this format; non-conforming messages will be
+      # rejected here rather than silently failing the next release PR.
+      run: |
+        head -n1 "{1}" | grep -qE '^(feat|fix|chore|docs|refactor|test|style|perf|ci|build|revert)(\([^)]+\))?!?: .+'

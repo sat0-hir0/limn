@@ -1,9 +1,9 @@
 [workspace]
 resolver = "2"
 members = [
-    "crates/editor-core",
-    "crates/editor-service",
-    "crates/editor-ui",
+    "crates/limn-core",
+    "crates/limn-service",
+    "crates/limn-ui",
     "crates/debt-scan",
 ]
 
@@ -14,7 +14,7 @@ members = [
 # release-please keeps them in lockstep via `cargo-workspace.merge = true`.
 edition = "2021"
 license = "Apache-2.0"
-repository = "https://github.com/sat0-hir0/editor"
+repository = "https://github.com/sat0-hir0/limn"
 
 [workspace.lints.rust]
 unsafe_code = "forbid"

@@ -12,5 +12,5 @@
 - [ ] `cargo fmt --all -- --check` passes
 - [ ] `cargo clippy --workspace --all-targets -- -D warnings` passes
 - [ ] `cargo test --workspace` passes
-- [ ] Respects the 3-layer dependency direction (`editor-core` ← `editor-service` ← `editor-ui`)
+- [ ] Respects the 3-layer dependency direction (`limn-core` ← `limn-service` ← `limn-ui`)
 - [ ] CHANGELOG entry — leave as is; release-please manages it

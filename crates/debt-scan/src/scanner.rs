@@ -242,7 +242,7 @@ fn count_external_deps(root: &Path) -> Result<u64> {
     // debt-scan is intentionally excluded — it's a dev tool that ships
     // serde / walkdir / clap, but those deps never reach the editor binary.
     let mut total = 0_u64;
-    for crate_dir in &["editor-core", "editor-service", "editor-ui"] {
+    for crate_dir in &["limn-core", "limn-service", "limn-ui"] {
         let manifest = root.join("crates").join(crate_dir).join("Cargo.toml");
         if !manifest.exists() {
             continue;
@@ -293,7 +293,7 @@ mod tests {
     fn detects_todo_marker_in_rust() {
         let mut c = counts();
         scan_line(
-            Path::new("crates/editor-core/src/lib.rs"),
+            Path::new("crates/limn-core/src/lib.rs"),
             0,
             "// TODO: implement parser",
             "rs",
@@ -321,7 +321,7 @@ mod tests {
     fn detects_allow_dead_code() {
         let mut c = counts();
         scan_line(
-            Path::new("crates/editor-core/src/lib.rs"),
+            Path::new("crates/limn-core/src/lib.rs"),
             0,
             "    #[allow(dead_code)]",
             "rs",
@@ -335,7 +335,7 @@ mod tests {
     fn detects_ignored_test() {
         let mut c = counts();
         scan_line(
-            Path::new("crates/editor-core/tests/roundtrip.rs"),
+            Path::new("crates/limn-core/tests/roundtrip.rs"),
             0,
             r#"#[ignore = "scaffold"]"#,
             "rs",
@@ -349,7 +349,7 @@ mod tests {
     fn detects_personal_path_when_name_configured() {
         let mut c = counts();
         scan_line(
-            Path::new("crates/editor-ui/src/main.rs"),
+            Path::new("crates/limn-ui/src/main.rs"),
             0,
             r#"let p = "C:\Users\alice\code\editor";"#,
             "rs",
@@ -363,7 +363,7 @@ mod tests {
     fn ignores_personal_path_when_no_names_configured() {
         let mut c = counts();
         scan_line(
-            Path::new("crates/editor-ui/src/main.rs"),
+            Path::new("crates/limn-ui/src/main.rs"),
             0,
             r#"let p = "C:\Users\alice\code\editor";"#,
             "rs",

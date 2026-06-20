@@ -13,7 +13,7 @@
 # Run locally with:
 #   gitleaks detect --source . --log-opts="--all"
 
-title = "editor gitleaks config"
+title = "limn gitleaks config"
 
 [extend]
 useDefault = true

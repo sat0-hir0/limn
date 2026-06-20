@@ -1,7 +1,11 @@
 # AGENTS.md
 
-A keyboard-first, AI-integrated block editor for `.md` files.
+Limn — a keyboard-first, AI-integrated block editor for `.md` files.
 Built on `gpui` (Zed's GUI framework), Rust native.
+
+"Limn" is the Old English verb for sketching the outline of something —
+making it visible by drawing it lightly. That's the user-facing
+experience the project is built around.
 
 This file is the vendor-neutral source of truth for AI coding tools
 (Claude Code, Codex, Cursor, Gemini CLI, GitHub Copilot, and others).
@@ -13,13 +17,13 @@ Human contributors should read [`CONTRIBUTING.md`](CONTRIBUTING.md) and
 Cargo workspace with three crates. Dependency direction is one-way:
 
 ```
-editor-ui → editor-service → editor-core
-editor-ui ───────────────→ editor-core
+limn-ui → limn-service → limn-core
+limn-ui ───────────────→ limn-core
 ```
 
-- `crates/editor-core` — Functional core: block tree, Markdown round-trip, completion. `std` only.
-- `crates/editor-service` — I/O, link index, AI calls. Depends on `editor-core`.
-- `crates/editor-ui` — `gpui` bindings, command palette. Depends on both.
+- `crates/limn-core` — Functional core: block tree, Markdown round-trip, completion. `std` only.
+- `crates/limn-service` — I/O, link index, AI calls. Depends on `limn-core`.
+- `crates/limn-ui` — `gpui` bindings, command palette. Depends on both.
 
 Reverse dependencies are forbidden.
 

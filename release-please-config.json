@@ -11,16 +11,16 @@
     }
   ],
   "packages": {
-    "crates/editor-core": {
-      "package-name": "editor-core",
+    "crates/limn-core": {
+      "package-name": "limn-core",
       "release-type": "rust"
     },
-    "crates/editor-service": {
-      "package-name": "editor-service",
+    "crates/limn-service": {
+      "package-name": "limn-service",
       "release-type": "rust"
     },
-    "crates/editor-ui": {
-      "package-name": "editor-ui",
+    "crates/limn-ui": {
+      "package-name": "limn-ui",
       "release-type": "rust"
     }
   },

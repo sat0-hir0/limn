@@ -19,13 +19,13 @@
 以下の依存方向のみを許容。逆向きは reviewer がブロックする。
 
 ```
-editor-ui ─→ editor-service ─→ editor-core
-editor-ui ────────────────────→ editor-core
+limn-ui ─→ limn-service ─→ limn-core
+limn-ui ────────────────→ limn-core
 ```
 
-- `editor-core`: `std` のみ。`tokio` / `gpui` / I/O 系のクレートを入れない
-- `editor-service`: `editor-core` と非同期 / I/O 系のみ。`gpui` を入れない
-- `editor-ui`: 全部 OK。ただし業務ロジックは書かない (= core / service に置く)
+- `limn-core`: `std` のみ。`tokio` / `gpui` / I/O 系のクレートを入れない
+- `limn-service`: `limn-core` と非同期 / I/O 系のみ。`gpui` を入れない
+- `limn-ui`: 全部 OK。ただし業務ロジックは書かない (= core / service に置く)
 
 ## コミットメッセージ
 
@@ -50,7 +50,7 @@ editor-ui ────────────────────→ editor
 ### 破壊的変更
 
 ```
-feat!: change the public API of `editor-core::Block`
+feat!: change the public API of `limn-core::Block`
 
 BREAKING CHANGE: `Block::new` now requires a parent reference.
 ```

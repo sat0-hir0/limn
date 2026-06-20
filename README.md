@@ -1,6 +1,8 @@
-# editor
+# Limn
 
 > フォルダ内の `.md` ファイル群を、キーボードファーストで編集する、シンプルで AI 統合されたネイティブエディタ。
+>
+> "Limn" は古英語で「輪郭を描く・浮かび上がらせる」の意。書き続けるうちに、思考の型がうっすら描き出されていく — そんな体験を支えるのが目標。
 
 設計の入口は [docs/spec-handoff-gpui.md](docs/spec-handoff-gpui.md)。
 
@@ -34,7 +36,7 @@ cargo --version
 ```sh
 cargo build --workspace
 cargo test --workspace
-cargo run -p editor-ui
+cargo run -p limn-ui
 ```
 
 開発前チェック (PR の CI と同じ):
@@ -49,19 +51,19 @@ cargo test --workspace
 
 ```
 crates/
-├── editor-core/      Functional Core: ブロックツリー / Markdown 変換 / 補完エンジン (純粋ロジック)
-├── editor-service/   Imperative Shell: .md I/O / リンク索引 / AI 呼び出し (副作用)
-└── editor-ui/        gpui バインド: 描画 / 入力 / コマンドパレット
+├── limn-core/      Functional Core: ブロックツリー / Markdown 変換 / 補完エンジン (純粋ロジック)
+├── limn-service/   Imperative Shell: .md I/O / リンク索引 / AI 呼び出し (副作用)
+└── limn-ui/        gpui バインド: 描画 / 入力 / コマンドパレット
 ```
 
 依存方向:
 
 ```
-editor-ui ─→ editor-service ─→ editor-core
-editor-ui ────────────────────→ editor-core
+limn-ui ─→ limn-service ─→ limn-core
+limn-ui ────────────────→ limn-core
 ```
 
-逆向きの依存を入れない。`editor-core` は `std` のみで自己完結。
+逆向きの依存を入れない。`limn-core` は `std` のみで自己完結。
 
 ## コントリビュート
 

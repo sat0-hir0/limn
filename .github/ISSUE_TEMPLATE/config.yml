@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Question / Discussion
+    url: https://github.com/sat0-hir0/editor/discussions
+    about: 質問・議論は Discussions へどうぞ

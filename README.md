@@ -63,6 +63,11 @@ editor-ui ────────────────────→ editor
 
 逆向きの依存を入れない。`editor-core` は `std` のみで自己完結。
 
+## コントリビュート
+
+PR / Issue 歓迎です。詳細は [CONTRIBUTING.md](CONTRIBUTING.md)。
+参加にあたっては [Code of Conduct](CODE_OF_CONDUCT.md) に同意してください。
+
 ## ライセンス
 
-Apache-2.0
+[Apache-2.0](LICENSE)

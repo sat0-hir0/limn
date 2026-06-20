@@ -1,5 +1,7 @@
 # Contributing
 
+このプロジェクトに参加するすべての人は [Code of Conduct](CODE_OF_CONDUCT.md) に従ってください。
+
 ## 開発フロー
 
 1. issue を立てる (or 既存の issue を pick up)
@@ -27,14 +29,37 @@ editor-ui ────────────────────→ editor
 
 ## コミットメッセージ
 
-Conventional Commits に倣う:
+[Conventional Commits](https://www.conventionalcommits.org/) に**準拠必須** (release-please が CHANGELOG とバージョン bump を自動でやるため)。
 
-- `feat: 新機能`
-- `fix: バグ修正`
-- `chore: 雑務 (ビルド/CI/依存更新)`
-- `docs: ドキュメント`
-- `refactor: 挙動を変えないリファクタ`
-- `test: テスト追加・修正`
+タイプ:
+
+| type | 用途 | CHANGELOG への露出 |
+|---|---|---|
+| `feat` | 新機能 | ✅ Features |
+| `fix` | バグ修正 | ✅ Bug Fixes |
+| `perf` | パフォーマンス改善 | ✅ Performance |
+| `refactor` | 挙動を変えないリファクタ | ✅ Refactoring |
+| `docs` | ドキュメント | ✅ Documentation |
+| `test` | テスト追加・修正 | 非表示 |
+| `ci` | CI / Actions 変更 | 非表示 |
+| `chore` | 雑務 (依存更新等) | 非表示 |
+| `style` | フォーマット差分のみ | 非表示 |
+
+スコープは任意: `feat(core): add block parser` のように書ける。
+
+### 破壊的変更
+
+```
+feat!: change the public API of `editor-core::Block`
+
+BREAKING CHANGE: `Block::new` now requires a parent reference.
+```
+
+`!` または `BREAKING CHANGE:` フッターで release-please が major bump (1.0.0 以降のみ。0.x の間は minor 扱い)。
+
+### CHANGELOG.md
+
+人間が編集しないこと (release-please が PR で更新する)。
 
 ## 設計ドキュメント
 

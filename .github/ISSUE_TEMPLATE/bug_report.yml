@@ -1,0 +1,69 @@
+name: Bug report
+description: Something is broken or behaving unexpectedly
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to file a bug report.
+
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+      description: 一行で何が起きたか
+      placeholder: 例) `/` コマンドパレットが Enter で閉じない
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to reproduce
+      description: 最短再現手順
+      placeholder: |
+        1. `cargo run -p editor-ui` を実行
+        2. `/` を押す
+        3. ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+      description: スタックトレース・ログがあれば貼ってください
+    validations:
+      required: true
+
+  - type: input
+    id: rustc
+    attributes:
+      label: rustc version
+      description: "`rustc --version` の出力"
+      placeholder: rustc 1.96.0 (ac68faa20 2026-05-25)
+    validations:
+      required: true
+
+  - type: input
+    id: os
+    attributes:
+      label: OS
+      placeholder: Windows 11 / macOS 14 / Ubuntu 24.04
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: code-of-conduct
+    attributes:
+      label: Code of Conduct
+      options:
+        - label: I agree to follow this project's [Code of Conduct](https://github.com/sat0-hir0/editor/blob/main/CODE_OF_CONDUCT.md)
+          required: true

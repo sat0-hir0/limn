@@ -21,7 +21,8 @@ jobs:
     name: lychee link check
     runs-on: ubuntu-latest
     permissions:
-      issues: write  # needed for lychee to open an issue on failure
+      contents: read  # needed for actions/checkout on private repos
+      issues: write   # needed for lychee to open an issue on failure
 
     steps:
       - uses: actions/checkout@v4

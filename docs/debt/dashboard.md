@@ -58,11 +58,46 @@ M2 lands real code worth measuring.
 
 ## Open debt
 
-No entries.
+### #1 — GPL contamination via gpui (transitive `zlog` / `ztracing`)
+
+- **Source**: introduced in M1 (commit `750e04b`), surfaced by
+  cargo-deny CI run 27889671424 once the gpui graph was on the
+  runner.
+- **What**: gpui depends on `sum_tree`, which depends on `ztracing`
+  and `zlog`. Both ship from the Zed monorepo under
+  **`GPL-3.0-or-later`**. They are linked into `limn-ui`'s final
+  binary, which makes distributing that binary under Apache-2.0
+  legally inconsistent — GPL's copyleft would attach to the whole
+  combined work the moment we ship.
+- **Why it's open**: `deny.toml` currently allows `GPL-3.0-or-later`
+  with a `⚠ DEBT` comment so the gate stays green while we move
+  through M1+. The allow is documentary, not a fix.
+- **Resolution conditions** (any one of):
+  - **(a)** Upstream relicenses `zlog` / `ztracing` away from GPL
+    (unlikely on Zed's timeline but free if it happens).
+  - **(b)** A patch makes `gpui` / `sum_tree` stop pulling `zlog`,
+    landed upstream. Most realistic path if the dependency is just
+    incidental logging.
+  - **(c)** Limn relicenses itself to `GPL-3.0-or-later`. Simple to
+    execute but throws away Apache-2.0's patent grant and any
+    closed-source downstream story.
+  - **(d)** Limn swaps gpui for an Apache-2.0 / MIT-licensed GUI
+    framework (iced, dioxus-native, egui, …). Largest carry but
+    the cleanest long-term answer.
+- **Status**: blocking public release. Do not flip the repo to
+  public — or publish releases — until one of (a)–(d) closes this
+  entry.
+- **Next step**: scout how the handful of other Apache-2.0 / MIT
+  projects that build on gpui handle the same transitive (see
+  `M1 投資: gpui の GPL 推移依存` task in the project history) and
+  decide between (b)–(d) before M5 (AI integration), at which point
+  the public-release timeline becomes real.
+
+---
 
 The repo intentionally stays close to the trunk through M1. As we add
 the editing path (M2), the `/`-palette (M3), and AI integration (M5),
-this is where the first real items will land.
+this is where additional items will land.
 
 ## Resolved debt
 

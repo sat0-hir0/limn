@@ -18,7 +18,6 @@ use std::{
 };
 
 use anyhow::{anyhow, Context, Result};
-use mdbook::book::{Book, BookItem};
 use regex::Regex;
 use serde_json::Value;
 
@@ -86,7 +85,7 @@ struct LiteContext {
     src: PathBuf,
 }
 
-fn parse_preprocessor_input(raw: &str) -> Result<(LiteContext, Book)> {
+fn parse_preprocessor_input(raw: &str) -> Result<(LiteContext, Value)> {
     let value: Value = serde_json::from_str(raw).context("parsing mdBook preprocessor JSON")?;
     let arr = value
         .as_array()
@@ -107,14 +106,12 @@ fn parse_preprocessor_input(raw: &str) -> Result<(LiteContext, Book)> {
         .and_then(Value::as_str)
         .unwrap_or("src");
 
-    let book: Book = serde_json::from_value(book_json.clone()).context("decoding Book")?;
-
     Ok((
         LiteContext {
             root: PathBuf::from(root),
             src: PathBuf::from(src),
         },
-        book,
+        book_json.clone(),
     ))
 }
 
@@ -137,7 +134,7 @@ fn run() -> Result<()> {
 // Top-level validator
 // ---------------------------------------------------------------------------
 
-fn validate(ctx: &LiteContext, book: &Book) -> Vec<String> {
+fn validate(ctx: &LiteContext, book: &Value) -> Vec<String> {
     // Repo root is the parent of the `src` (docs) directory.
     let repo_root = ctx
         .src
@@ -168,17 +165,38 @@ struct Chapter {
     content: String,
 }
 
-fn collect_chapters(book: &Book) -> Vec<Chapter> {
+fn collect_chapters(book: &Value) -> Vec<Chapter> {
     let mut chapters = Vec::new();
-    for item in book.iter() {
-        if let BookItem::Chapter(ch) = item {
-            chapters.push(Chapter {
-                path: ch.path.clone(),
-                content: ch.content.clone(),
-            });
-        }
+    if let Some(sections) = book.get("sections").and_then(Value::as_array) {
+        collect_from_items(sections, &mut chapters);
     }
     chapters
+}
+
+/// Walk a JSON array of BookItem variants and append every Chapter to
+/// `out`, descending into sub_items recursively. Each BookItem comes in
+/// as `{ "Chapter": { ... } }`, `{ "Separator": null }`, or
+/// `{ "PartTitle": "..." }`.
+fn collect_from_items(items: &[Value], out: &mut Vec<Chapter>) {
+    for item in items {
+        let Some(ch_json) = item.get("Chapter") else {
+            continue;
+        };
+        let path = ch_json
+            .get("path")
+            .and_then(Value::as_str)
+            .map(PathBuf::from);
+        let content = ch_json
+            .get("content")
+            .and_then(Value::as_str)
+            .unwrap_or_default()
+            .to_string();
+        out.push(Chapter { path, content });
+
+        if let Some(sub) = ch_json.get("sub_items").and_then(Value::as_array) {
+            collect_from_items(sub, out);
+        }
+    }
 }
 
 // ---------------------------------------------------------------------------

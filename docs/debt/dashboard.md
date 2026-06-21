@@ -39,23 +39,19 @@ cargo run -p debt-scan -- gate --update-baseline   # accept new baseline
 
 ### Baseline at a glance
 
-The baseline below was captured at commit `9f325ff` (M0.7). Verify
-against [`baseline.json`](baseline.json) — that file is the source of
-truth; the table here is just for humans.
+The current baseline was refreshed at the M1 commit. Verify against
+[`baseline.json`](baseline.json) — that file is the source of truth;
+the table here is just for humans.
 
-| Category                | Baseline |
-| ----------------------- | -------: |
-| `rust-loc`              |      193 |
-| `external-deps`         |        0 |
-| `todo-fixme`            |        0 |
-| `allow-dead-code`       |        0 |
-| `ignored-tests`         |        5 |
-| `unsafe-blocks`         |        0 |
-| `personal-windows-path` |        0 |
-
-The five ignored tests are deliberate: they are the Markdown round-trip
-contract from [`testing-strategy.md`](../testing-strategy.md),
-scaffolded but not implementable until M2.
+| Category                | Baseline | Notes                                                                     |
+| ----------------------- | -------: | ------------------------------------------------------------------------- |
+| `rust-loc`              |      662 | Jumped from 193 at M0.7 because M1 added the parser, vault, gpui shell, plus integration + E2E tests. |
+| `external-deps`         |        4 | `gpui` and `gpui_platform` (runtime), `tempfile` and the gpui `test-support` activation (dev-deps). |
+| `todo-fixme`            |        0 |                                                                            |
+| `allow-dead-code`       |        0 |                                                                            |
+| `ignored-tests`         |        5 | Still the Markdown round-trip scaffold from `tests/roundtrip.rs`, waiting on M2's `serialize`. |
+| `unsafe-blocks`         |        0 | `unsafe_code = "forbid"` is workspace-wide.                                |
+| `personal-windows-path` |        0 |                                                                            |
 
 Test coverage will be added by a separate tool (`cargo-llvm-cov`) when
 M2 lands real code worth measuring.
@@ -64,9 +60,9 @@ M2 lands real code worth measuring.
 
 No entries.
 
-The repo is intentionally near-empty right now (M0 .. M0.9 set up the
-project, not the product). The first real entries will appear as M1
-(gpui integration) lands.
+The repo intentionally stays close to the trunk through M1. As we add
+the editing path (M2), the `/`-palette (M3), and AI integration (M5),
+this is where the first real items will land.
 
 ## Resolved debt
 

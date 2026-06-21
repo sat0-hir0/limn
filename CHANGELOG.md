@@ -37,4 +37,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - GPU required — a known `gpui` limitation prevents startup on older
   integrated GPUs.
 
-[0.1.0]: https://github.com/sat0-hir0/limn/releases/tag/v0.1.0
+<!-- [0.1.0]: https://github.com/sat0-hir0/limn/releases/tag/v0.1.0 — added when the v0.1.0 GitHub Release is published -->

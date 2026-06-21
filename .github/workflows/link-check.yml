@@ -33,7 +33,6 @@ jobs:
           # Scan all Markdown and TOML files from the repo root.
           # .lycheeignore is picked up automatically by lychee.
           args: >-
-            --base .
             --verbose
             --no-progress
             './**/*.md'

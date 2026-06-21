@@ -17,9 +17,9 @@ use std::{
     process,
 };
 
-use anyhow::{Context, Result};
+use anyhow::{anyhow, Context, Result};
 use mdbook::book::{Book, BookItem};
-use mdbook::preprocess::{CmdPreprocessor, PreprocessorContext};
+use serde_json::Value;
 use regex::Regex;
 
 // ---------------------------------------------------------------------------
@@ -77,9 +77,54 @@ fn main() {
     }
 }
 
+/// What we actually need from the preprocessor context. mdBook keeps
+/// adding fields under `config.*` and rejects the full struct when any
+/// optional TOML value comes through as `null`, so we extract the two
+/// path fields we care about by hand.
+struct LiteContext {
+    root: PathBuf,
+    src: PathBuf,
+}
+
+fn parse_preprocessor_input(raw: &str) -> Result<(LiteContext, Book)> {
+    let value: Value = serde_json::from_str(raw).context("parsing mdBook preprocessor JSON")?;
+    let arr = value
+        .as_array()
+        .ok_or_else(|| anyhow!("mdBook preprocessor input must be a JSON array"))?;
+    let ctx_json = arr
+        .first()
+        .ok_or_else(|| anyhow!("missing PreprocessorContext element"))?;
+    let book_json = arr
+        .get(1)
+        .ok_or_else(|| anyhow!("missing Book element"))?;
+
+    let root = ctx_json
+        .get("root")
+        .and_then(Value::as_str)
+        .ok_or_else(|| anyhow!("missing root in PreprocessorContext"))?;
+    let src = ctx_json
+        .get("config")
+        .and_then(|c| c.get("book"))
+        .and_then(|b| b.get("src"))
+        .and_then(Value::as_str)
+        .unwrap_or("src");
+
+    let book: Book = serde_json::from_value(book_json.clone()).context("decoding Book")?;
+
+    Ok((
+        LiteContext {
+            root: PathBuf::from(root),
+            src: PathBuf::from(src),
+        },
+        book,
+    ))
+}
+
 fn run() -> Result<()> {
-    let (ctx, book) =
-        CmdPreprocessor::parse_input(io::stdin()).context("parsing mdBook preprocessor input")?;
+    let mut raw = String::new();
+    io::Read::read_to_string(&mut io::stdin(), &mut raw).context("reading stdin")?;
+
+    let (ctx, book) = parse_preprocessor_input(&raw)?;
 
     let mode = LintMode::from_env();
     let errors = validate(&ctx, &book);
@@ -94,11 +139,9 @@ fn run() -> Result<()> {
 // Top-level validator
 // ---------------------------------------------------------------------------
 
-fn validate(ctx: &PreprocessorContext, book: &Book) -> Vec<String> {
+fn validate(ctx: &LiteContext, book: &Book) -> Vec<String> {
     // Repo root is the parent of the `src` (docs) directory.
     let repo_root = ctx
-        .config
-        .book
         .src
         .parent()
         .map(|p| ctx.root.join(p))

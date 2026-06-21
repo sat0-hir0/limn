@@ -1,0 +1,37 @@
+# GitHub issue / PR labels, kept in sync by .github/workflows/labels.yml
+# (via crazy-max/ghaction-github-labeler).
+#
+# Minimum Pallets-style set: 7 labels covering "what kind of report",
+# "triage shortcut", and "won't fix". Two adoption-friendly labels
+# (`good first issue`, `help wanted`) are deferred until public launch.
+#
+# Edit this file, open a PR; on merge to main, the workflow reconciles
+# the live repo labels to match.
+
+- name: bug
+  description: Something is broken or behaves unexpectedly
+  color: d73a4a
+
+- name: documentation
+  description: Improvements or additions to documentation
+  color: 0075ca
+
+- name: enhancement
+  description: New feature or behavior change request
+  color: a2eeef
+
+- name: question
+  description: Further information is requested
+  color: d876e3
+
+- name: duplicate
+  description: This issue or pull request already exists
+  color: cfd3d7
+
+- name: invalid
+  description: This doesn't look right
+  color: e4e669
+
+- name: wontfix
+  description: This will not be worked on
+  color: ffffff

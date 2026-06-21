@@ -1,0 +1,17 @@
+# lychee ignore patterns — one regex per line.
+# lychee reads this file automatically from the repo root.
+
+# Local / loopback URLs are never reachable from CI
+^https?://localhost
+^https?://127\.0\.0\.1
+^file://
+
+# RFC-reserved example domains (used in docs as placeholders)
+^https?://example\.(com|org|net)
+
+# GitHub Pages for this project: may 404 until the first deploy
+^https?://sat0-hir0\.github\.io/limn
+
+# Forward references to issues / PRs / discussions that don't exist yet.
+# We allow these so ADRs can pre-link planned tracking issues.
+^https?://github\.com/sat0-hir0/limn/(issues|pulls|discussions)/[0-9]+

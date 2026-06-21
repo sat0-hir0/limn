@@ -1,0 +1,71 @@
+name: code-metrics
+
+# Monthly snapshot of "soft" code-health signals: outdated dependencies
+# and unused dependencies. These are *report only* — the workflow never
+# fails. Dependabot already opens PRs for the version bumps; this is
+# the bird's-eye view that complements it.
+#
+# cargo-udeps requires the nightly toolchain because it relies on
+# unstable rustc internals.
+
+on:
+  schedule:
+    - cron: '0 6 1 * *'   # 1st of each month, 06:00 UTC
+  workflow_dispatch:
+
+env:
+  CARGO_TERM_COLOR: always
+
+permissions:
+  contents: read
+
+jobs:
+  outdated:
+    name: cargo outdated (monthly)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Rust toolchain
+        run: rustup show
+      - uses: Swatinem/rust-cache@v2
+      - uses: taiki-e/install-action@cargo-outdated
+      - name: Run cargo outdated
+        run: |
+          mkdir -p target
+          cargo outdated --workspace --depth 1 \
+            | tee target/outdated.txt \
+            || true
+      - uses: actions/upload-artifact@v4
+        with:
+          name: outdated-report
+          path: target/outdated.txt
+          retention-days: 90
+
+  udeps:
+    name: cargo udeps (monthly)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install nightly Rust toolchain
+        run: rustup toolchain install nightly --profile minimal
+      - name: Install gpui system deps
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libwayland-dev libxkbcommon-x11-dev \
+            libfontconfig1-dev libssl-dev \
+            libasound2-dev \
+            pkg-config
+      - uses: Swatinem/rust-cache@v2
+      - uses: taiki-e/install-action@cargo-udeps
+      - name: Run cargo udeps
+        run: |
+          mkdir -p target
+          cargo +nightly udeps --workspace --all-targets \
+            | tee target/udeps.txt \
+            || true
+      - uses: actions/upload-artifact@v4
+        with:
+          name: udeps-report
+          path: target/udeps.txt
+          retention-days: 90

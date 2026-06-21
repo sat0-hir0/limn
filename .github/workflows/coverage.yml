@@ -1,0 +1,59 @@
+name: coverage
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+env:
+  CARGO_TERM_COLOR: always
+
+permissions:
+  contents: read
+
+jobs:
+  coverage:
+    name: cargo-llvm-cov + Codecov
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        run: |
+          rustup show
+          rustup component add llvm-tools-preview
+
+      - name: Install gpui system deps
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libwayland-dev libxkbcommon-x11-dev \
+            libfontconfig1-dev libssl-dev \
+            libasound2-dev \
+            pkg-config
+
+      - uses: Swatinem/rust-cache@v2
+
+      - uses: taiki-e/install-action@cargo-llvm-cov
+
+      - name: Generate LCOV report
+        run: cargo llvm-cov --workspace --lcov --output-path lcov.info
+
+      - name: Generate HTML report
+        run: cargo llvm-cov --workspace --html --output-dir target/llvm-cov-html
+
+      - name: Upload to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: lcov.info
+          fail_ci_if_error: false
+
+      - name: Upload HTML report (artifact)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-html
+          path: target/llvm-cov-html/
+          retention-days: 14

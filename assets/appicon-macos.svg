@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none" role="img" aria-label="Limn — macOS">
+  <defs><linearGradient id="t" x1="256" y1="56" x2="256" y2="456" gradientUnits="userSpaceOnUse">
+    <stop offset="0" stop-color="#f8fafb"></stop><stop offset="1" stop-color="#e9edee"></stop></linearGradient></defs>
+  <rect x="56" y="56" width="400" height="400" rx="92" fill="url(#t)"></rect>
+  <rect x="56.75" y="56.75" width="398.5" height="398.5" rx="91.25" stroke="#d3dadb" stroke-width="1.5"></rect>
+  <rect x="237" y="151" width="38" height="232" rx="6" fill="#16191c"></rect>
+</svg>

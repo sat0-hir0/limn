@@ -1,0 +1,14 @@
+[book]
+title = "Limn"
+description = "Keyboard-first, AI-integrated block editor for Markdown files"
+src = "docs"
+language = "en"
+
+[preprocessor.limn-doc-preprocessor]
+command = "cargo run -p limn-doc-preprocessor --"
+renderer = ["html"]
+
+[output.html]
+git-repository-url = "https://github.com/sat0-hir0/limn"
+edit-url-template = "https://github.com/sat0-hir0/limn/edit/main/{path}"
+no-section-label = false

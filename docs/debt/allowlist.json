@@ -1,0 +1,4 @@
+{
+  "$comment": "Per-path allowlist for false positives. Add entries here when the scanner trips on something that is intentional.  Format: { category: [glob, ...] }.  The current scanner does not yet honour this file; it is reserved so the format is locked in before debt actually appears.",
+  "rules": {}
+}

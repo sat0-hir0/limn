@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none" role="img" aria-label="Limn — Linux">
+  <defs><linearGradient id="d" x1="256" y1="48" x2="256" y2="464" gradientUnits="userSpaceOnUse">
+    <stop offset="0" stop-color="#f8fafb"></stop><stop offset="1" stop-color="#e9edee"></stop></linearGradient></defs>
+  <circle cx="256" cy="256" r="208" fill="url(#d)"></circle>
+  <circle cx="256" cy="256" r="207.25" stroke="#d3dadb" stroke-width="1.5"></circle>
+  <rect x="237" y="156" width="38" height="200" rx="6" fill="#16191c"></rect>
+</svg>

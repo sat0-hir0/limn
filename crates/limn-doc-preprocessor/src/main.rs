@@ -12,15 +12,14 @@
 /// - "warn"            → print warning but exit 0 (useful for local iteration)
 use std::{
     collections::{HashMap, HashSet},
-    env, fs,
-    io::{self, Read},
+    env, fs, io,
     path::{Path, PathBuf},
     process,
 };
 
 use anyhow::{Context, Result};
 use mdbook::book::{Book, BookItem};
-use mdbook::preprocess::PreprocessorContext;
+use mdbook::preprocess::{CmdPreprocessor, PreprocessorContext};
 use regex::Regex;
 
 // ---------------------------------------------------------------------------
@@ -79,13 +78,8 @@ fn main() {
 }
 
 fn run() -> Result<()> {
-    let mut raw = String::new();
-    io::stdin()
-        .read_to_string(&mut raw)
-        .context("reading stdin")?;
-
-    let (ctx, book): (PreprocessorContext, Book) =
-        serde_json::from_str(&raw).context("parsing mdBook JSON input")?;
+    let (ctx, book) =
+        CmdPreprocessor::parse_input(io::stdin()).context("parsing mdBook preprocessor input")?;
 
     let mode = LintMode::from_env();
     let errors = validate(&ctx, &book);

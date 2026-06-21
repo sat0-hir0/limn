@@ -1,0 +1,73 @@
+name: Bug report
+description: Something is broken or behaving unexpectedly
+title: "[bug] "
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to file a bug report.
+
+        Tip: keep the `[bug] ` prefix in the title and fill in the
+        rest with a short, specific summary.
+
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+      description: One-line description of what happened
+      placeholder: e.g. `/` command palette does not close on Enter
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to reproduce
+      description: Minimal steps to reproduce
+      placeholder: |
+        1. Run `cargo run -p limn-ui`
+        2. Press `/`
+        3. ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+      description: Include stack traces or logs if available
+    validations:
+      required: true
+
+  - type: input
+    id: rustc
+    attributes:
+      label: rustc version
+      description: "Output of `rustc --version`"
+      placeholder: rustc 1.96.0 (ac68faa20 2026-05-25)
+    validations:
+      required: true
+
+  - type: input
+    id: os
+    attributes:
+      label: OS
+      placeholder: Windows 11 / macOS 14 / Ubuntu 24.04
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: code-of-conduct
+    attributes:
+      label: Code of Conduct
+      options:
+        - label: I agree to follow this project's [Code of Conduct](https://github.com/sat0-hir0/limn/blob/main/CODE_OF_CONDUCT.md)
+          required: true

@@ -1,0 +1,68 @@
+[graph]
+targets = []
+
+[licenses]
+allow = [
+    "Apache-2.0",
+    "MIT",
+    "BSD-2-Clause",
+    "BSD-3-Clause",
+    "ISC",
+    "Unicode-DFS-2016",
+    "Unicode-3.0",
+    "Zlib",
+    "CC0-1.0",
+    "MPL-2.0",
+    # Required by LLVM-derived transitives (ar_archive_writer, libfuzzer-sys).
+    # The "with" exception is FSF-libre and compatible with Apache-2.0 use.
+    "Apache-2.0 WITH LLVM-exception",
+    "NCSA",
+    "bzip2-1.0.6",
+    # Awaiting upstream — see https://github.com/sat0-hir0/limn/issues/4.
+    # zlog / ztracing / ztracing_macro ship from the Zed monorepo under
+    # GPL-3.0-or-later and get pulled in transitively by sum_tree → gpui.
+    # Allowing this keeps the cargo-deny gate green while we wait on
+    # zed-industries/zed#55470 (or pick a swap path); it does not
+    # resolve the underlying conflict with Limn's Apache-2.0 stance.
+    "GPL-3.0-or-later",
+]
+confidence-threshold = 0.93
+# Stay green when an allowed license is not used by any dep yet (M0 has
+# no external deps; the allow list is forward-looking for M1+).
+unused-allowed-license = "allow"
+
+[bans]
+multiple-versions = "warn"
+wildcards = "deny"
+# Workspace-internal `path = "..."` deps look like wildcard versions
+# but are fine — they always resolve locally. External wildcard
+# `version = "*"` deps are still denied.
+allow-wildcard-paths = true
+
+[advisories]
+yanked = "warn"
+# gpui pulls in several transitive deps that have been marked
+# unmaintained by RustSec. We don't control them; the explicit ignores
+# below keep the gate green until Zed updates upstream. Adding new
+# entries is a conscious choice — call it out in the commit message.
+ignore = [
+    "RUSTSEC-2024-0370", # proc-macro-error (transitive via gpui)
+    "RUSTSEC-2024-0384", # instant (transitive via gpui)
+    "RUSTSEC-2024-0436", # paste (transitive via gpui)
+    "RUSTSEC-2025-0052", # async-std (transitive via gpui)
+    "RUSTSEC-2026-0173", # proc-macro-error2 (transitive via gpui)
+]
+
+[sources]
+unknown-registry = "deny"
+unknown-git = "deny"
+allow-git = [
+    "https://github.com/zed-industries/zed",
+    "https://github.com/longbridge/gpui-component",
+    # gpui's transitive git deps. Pinned by the Zed rev we use, so
+    # adding them here just acknowledges what the lockfile already says.
+    "https://github.com/zed-industries/wgpu.git",
+    "https://github.com/zed-industries/font-kit",
+    "https://github.com/zed-industries/xim-rs.git",
+    "https://github.com/proptest-rs/proptest",
+]

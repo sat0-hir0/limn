@@ -1,0 +1,53 @@
+# gitleaks configuration. https://github.com/gitleaks/gitleaks
+#
+# This extends the built-in ruleset (≈150 patterns for API keys, tokens,
+# private keys, etc.) with a handful of patterns that catch personally
+# identifying material accidentally committed by anyone working on the
+# project.
+#
+# For patterns that are specific to your own identity (your developer
+# username, full name, personal email), create a gitignored
+# `.gitleaks-local.toml` and invoke gitleaks with
+# `--config .gitleaks-local.toml`. See CONTRIBUTING.md.
+#
+# Run locally with:
+#   gitleaks detect --source . --log-opts="--all"
+
+title = "limn gitleaks config"
+
+[extend]
+useDefault = true
+
+# ─────────────────────────────────────────────────────────────────────────
+# Generic identity / credential patterns
+# These apply to every developer and should never appear in commits.
+# ─────────────────────────────────────────────────────────────────────────
+
+[[rules]]
+id = "anthropic-org-id"
+description = "Anthropic Console organization ID (org-…)"
+regex = '''\borg-[A-Za-z0-9]{16,}\b'''
+tags = ["identity", "key"]
+
+[[rules]]
+id = "openai-org-id"
+description = "OpenAI organization ID (org-…)"
+regex = '''\borg-[A-Za-z0-9]{20,}\b'''
+tags = ["identity", "key"]
+
+[[rules]]
+id = "ssh-fingerprint"
+description = "SSH key fingerprint (SHA256:…) — identifies an individual"
+regex = '''SHA256:[A-Za-z0-9+/]{43}'''
+tags = ["identity", "key"]
+
+# ─────────────────────────────────────────────────────────────────────────
+# Global allowlist
+# ─────────────────────────────────────────────────────────────────────────
+
+[allowlist]
+description = "global allowlist"
+paths = [
+    '''target/''',
+    '''Cargo\.lock''',
+]

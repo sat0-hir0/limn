@@ -1,0 +1,27 @@
+[package]
+name = "limn-ui"
+version = "0.0.0"
+edition.workspace = true
+license.workspace = true
+publish = false
+
+[lints]
+workspace = true
+
+[dependencies]
+limn-core = { path = "../limn-core" }
+limn-service = { path = "../limn-service" }
+gpui = { workspace = true }
+gpui_platform = { workspace = true }
+
+[dev-dependencies]
+# Need the `test-support` feature so `#[gpui::test]` resolves
+# `TestAppContext` and the `run_test` helper.
+gpui = { workspace = true, features = ["test-support"] }
+
+[lib]
+path = "src/lib.rs"
+
+[[bin]]
+name = "limn-ui"
+path = "src/main.rs"

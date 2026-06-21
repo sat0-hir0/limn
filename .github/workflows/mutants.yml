@@ -1,0 +1,56 @@
+name: mutants
+
+# cargo-mutants: mutation testing. Far too slow (= 10+ minutes per run)
+# to put on every PR, so this runs weekly on a cron and is also
+# triggerable on demand from the Actions tab. Results are uploaded as
+# an artifact; this workflow never fails the build.
+#
+# When test density grows (= M2 editing + the new parser), revisit this
+# and start trimming the missed-mutants list.
+
+on:
+  schedule:
+    - cron: '0 3 * * 0'   # Sundays, 03:00 UTC
+  workflow_dispatch:
+
+env:
+  CARGO_TERM_COLOR: always
+
+permissions:
+  contents: read
+
+jobs:
+  mutants:
+    name: cargo mutants (weekly)
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        run: rustup show
+
+      - name: Install gpui system deps
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libwayland-dev libxkbcommon-x11-dev \
+            libfontconfig1-dev libssl-dev \
+            libasound2-dev \
+            pkg-config
+
+      - uses: Swatinem/rust-cache@v2
+
+      - uses: taiki-e/install-action@cargo-mutants
+
+      - name: Run cargo-mutants
+        run: cargo mutants --in-place --no-shuffle || true
+        continue-on-error: true
+
+      - name: Upload mutants report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mutants-report
+          path: mutants.out/
+          retention-days: 30

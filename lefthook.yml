@@ -1,0 +1,47 @@
+# lefthook configuration. https://lefthook.dev
+#
+# After cloning, run `lefthook install` once to wire these into
+# .git/hooks/. Hooks run automatically thereafter.
+
+pre-commit:
+  parallel: true
+  commands:
+    gitleaks:
+      # Scan only staged changes; cheap enough to run on every commit.
+      # Prefer the per-developer personal config when present (it extends
+      # the shared .gitleaks.toml).
+      run: |
+        cfg=.gitleaks.toml
+        [ -f .gitleaks-local.toml ] && cfg=.gitleaks-local.toml
+        gitleaks protect --staged --redact --config "$cfg"
+
+pre-push:
+  parallel: true
+  commands:
+    fmt-check:
+      run: cargo fmt --all -- --check
+    clippy:
+      run: cargo clippy --workspace --all-targets -- -D warnings
+    test:
+      run: cargo test --workspace
+    gitleaks:
+      # Belt-and-braces: scan the commits being pushed in case the
+      # pre-commit hook was bypassed.
+      run: |
+        cfg=.gitleaks.toml
+        [ -f .gitleaks-local.toml ] && cfg=.gitleaks-local.toml
+        gitleaks detect --log-opts="@{upstream}..HEAD" --redact --config "$cfg"
+    debt-scan:
+      # Report-only for now (`|| true`): never block a push.
+      # Run gate so any baseline regression shows up in the terminal
+      # before CI catches it.
+      run: cargo run -p debt-scan --quiet -- gate || true
+
+commit-msg:
+  commands:
+    conventional-commits:
+      # Verify the first line of the commit message matches Conventional Commits.
+      # release-please consumes this format; non-conforming messages will be
+      # rejected here rather than silently failing the next release PR.
+      run: |
+        head -n1 "{1}" | grep -qE '^(feat|fix|chore|docs|refactor|test|style|perf|ci|build|revert)(\([^)]+\))?!?: .+'

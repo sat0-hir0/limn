@@ -1,0 +1,44 @@
+# Rust
+/target/
+**/*.rs.bk
+
+# debt-scan generated reports
+/reports/
+
+# IDE / editor
+.idea/
+.vscode/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
+
+# AI tool personal areas (synced by skillshare or local tool setup)
+# The vendor-neutral source of truth lives under .skillshare/.
+.claude/
+.cursor/
+.codex/
+.gemini/
+.agents/
+
+# Per-developer local overrides for AGENTS-style memory files.
+# CLAUDE.md (committed) imports AGENTS.md; CLAUDE.local.md is appended
+# on top for personal notes that should not be shared.
+CLAUDE.local.md
+AGENTS.local.md
+
+# lefthook local override (per-developer)
+lefthook-local.yml
+
+# gitleaks per-developer personal rules
+.gitleaks-local.toml
+
+# Secrets / credentials. gitleaks catches accidental leaks at commit time,
+# but ignoring these patterns is the first line of defence.
+.env
+.env.*
+!.env.example
+*.secret
+*.secrets
+secrets/

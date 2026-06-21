@@ -1,0 +1,42 @@
+# Link health check via lychee.
+#
+# Design intent: ARCHITECTURE.md and the ADRs under docs/adr/ are the
+# canonical design sources; they cross-link each other and link to external
+# references. A broken link silently rots the doc graph, so we catch it here
+# in CI before it reaches main. See ARCHITECTURE.md and docs/adr/ for context.
+
+name: Link Check
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    # Weekly on Monday at 09:00 UTC
+    - cron: "0 9 * * 1"
+
+jobs:
+  link-check:
+    name: lychee link check
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write  # needed for lychee to open an issue on failure
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run lychee
+        uses: lycheeverse/lychee-action@v2
+        with:
+          # Scan all Markdown and TOML files from the repo root.
+          # .lycheeignore is picked up automatically by lychee.
+          args: >-
+            --base .
+            --verbose
+            --no-progress
+            './**/*.md'
+            './**/*.toml'
+          # Create a GitHub issue when broken links are found on schedule runs.
+          fail: true
+          token: ${{ secrets.GITHUB_TOKEN }}

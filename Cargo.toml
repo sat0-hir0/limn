@@ -1,0 +1,33 @@
+[workspace]
+resolver = "2"
+members = [
+    "crates/limn-core",
+    "crates/limn-service",
+    "crates/limn-ui",
+    "crates/debt-scan",
+    "crates/limn-doc-preprocessor",
+]
+
+[workspace.package]
+# version intentionally NOT here: release-please's cargo-workspace plugin
+# does not understand `version.workspace = true` inheritance and bails on
+# "invalid [package.version]". Each crate sets its own version directly;
+# release-please keeps them in lockstep via `cargo-workspace.merge = true`.
+edition = "2021"
+license = "Apache-2.0"
+repository = "https://github.com/sat0-hir0/limn"
+
+[workspace.lints.rust]
+unsafe_code = "forbid"
+
+[workspace.lints.clippy]
+all = { level = "warn", priority = -1 }
+pedantic = { level = "warn", priority = -1 }
+
+# GUI stack. Pinned to the same rev gpui-component currently uses;
+# anything else risks cargo seeing two copies of gpui in the graph.
+# Update both `rev` values together when refreshing.
+[workspace.dependencies]
+gpui = { git = "https://github.com/zed-industries/zed", rev = "1d217ee39d381ac101b7cf49d3d22451ac1093fe" }
+gpui_platform = { git = "https://github.com/zed-industries/zed", rev = "1d217ee39d381ac101b7cf49d3d22451ac1093fe", features = ["font-kit", "x11", "wayland", "runtime_shaders"] }
+gpui-component = { git = "https://github.com/longbridge/gpui-component", rev = "8e4930f" }

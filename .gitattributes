@@ -1,0 +1,5 @@
+* text=auto eol=lf
+
+*.rs   text eol=lf diff=rust
+*.toml text eol=lf
+*.md   text eol=lf

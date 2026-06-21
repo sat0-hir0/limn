@@ -1,0 +1,49 @@
+name: debt-metrics
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  scan:
+    name: scan
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        run: rustup show
+
+      - uses: Swatinem/rust-cache@v2
+
+      - name: Run debt-scan gate (report-only — never fails the job)
+        run: cargo run -p debt-scan --quiet -- gate || true
+
+      - name: Build PR comment body
+        id: body
+        if: github.event_name == 'pull_request'
+        run: |
+          {
+            echo "## debt-scan (commit \`${GITHUB_SHA::7}\`)"
+            echo
+            cat reports/debt/latest.md
+            echo
+            echo "_Baseline lives in [\`docs/debt/baseline.json\`](../blob/main/docs/debt/baseline.json). Gate is currently report-only._"
+          } > body.md
+          {
+            echo 'body<<BODY_EOF'
+            cat body.md
+            echo 'BODY_EOF'
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Post sticky comment
+        if: github.event_name == 'pull_request'
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          header: debt-metrics
+          message: ${{ steps.body.outputs.body }}

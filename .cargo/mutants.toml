@@ -1,0 +1,20 @@
+# cargo-mutants configuration. https://mutants.rs/
+#
+# Mutation testing is opt-in noise: it generates a lot of mutants the
+# tests can't possibly catch (binary entry points, view glue, etc.).
+# This config skips the obviously-uninteresting paths so the signal in
+# `mutants.out/missed.txt` is actionable.
+
+exclude_globs = [
+    "crates/debt-scan/**",   # Developer tool, not product code.
+    "**/tests/**",            # Tests don't mutate themselves.
+    "**/main.rs",             # Binary entry points carry no logic.
+    "crates/limn-ui/src/lib.rs",  # gpui view glue; tested via E2E only.
+]
+
+# gpui's TestPlatform path is slow under heavy load; give cargo-test
+# room before mutants gives up on a mutant.
+timeout_multiplier = 2.0
+
+# Keep the workspace flag on so all three crates participate.
+test_workspace = true

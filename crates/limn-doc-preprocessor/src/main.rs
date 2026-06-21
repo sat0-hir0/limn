@@ -19,8 +19,8 @@ use std::{
 
 use anyhow::{anyhow, Context, Result};
 use mdbook::book::{Book, BookItem};
-use serde_json::Value;
 use regex::Regex;
+use serde_json::Value;
 
 // ---------------------------------------------------------------------------
 // Lint-mode helpers
@@ -94,9 +94,7 @@ fn parse_preprocessor_input(raw: &str) -> Result<(LiteContext, Book)> {
     let ctx_json = arr
         .first()
         .ok_or_else(|| anyhow!("missing PreprocessorContext element"))?;
-    let book_json = arr
-        .get(1)
-        .ok_or_else(|| anyhow!("missing Book element"))?;
+    let book_json = arr.get(1).ok_or_else(|| anyhow!("missing Book element"))?;
 
     let root = ctx_json
         .get("root")

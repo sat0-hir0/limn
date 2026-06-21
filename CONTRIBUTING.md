@@ -113,12 +113,34 @@ make the local checks louder for you.
 [`docs/debt/dashboard.md`](docs/debt/dashboard.md) に書く。
 **解消条件 (どうなったら直すか) を必ず書くこと。** 書かないとただの愚痴になる。
 
-- 単一ファイルで完結する負債 → `docs/debt/dashboard.md` の Open debt に追記
-- 設計判断 or 複数ファイル横断 → GitHub Issue に `tech-debt` label を付けて立てる
 - 機械計測値は [`debt-scan`](crates/debt-scan/) クレートが扱う。
   `cargo run -p debt-scan -- scan` で計測、`-- gate` で baseline 比較。
   CI が PR コメントに差分を出すので、増えたら理由を書くこと。
   当面は **report-only** (= 自動 fail なし) でスタート。
+- 機械で数えにくいもの (= 設計判断、複数ファイル横断、上流待ち) は
+  `docs/debt/dashboard.md` の Open debt 節に追記する。
+
+**Tech debt は GitHub Issue では追わない**。 すべて
+`docs/debt/dashboard.md` + `debt-scan` で完結させる方針。 GitHub Issue は
+bug report と機能要望 (= contributor 向けの入口) に絞っている。
+
+## Issue を立てるとき
+
+GitHub Issue は **2 種類だけ**:
+
+- `bug` — 何かが壊れている / 期待通り動かない
+- `enhancement` — 新機能 / 既存機能の改善案
+
+それ以外の質問・アイデア・雑談は
+[GitHub Discussions](https://github.com/sat0-hir0/limn/discussions)
+へ (公開直前まで disabled の場合あり)。
+
+タイトルは Conventional Commits のタイプ表記に揃えると、 後で PR に
+リンクするときに統一感が出ます (任意):
+
+- `[bug] window fails to open on Wayland when GPU is absent`
+- `[feat] add slash palette to limn-ui`
+- `[docs] clarify M1 build instructions for Windows`
 
 ## 設計ドキュメント
 

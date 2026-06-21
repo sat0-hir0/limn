@@ -1,11 +1,15 @@
 name: Bug report
 description: Something is broken or behaving unexpectedly
+title: "[bug] "
 labels: [bug]
 body:
   - type: markdown
     attributes:
       value: |
         Thanks for taking the time to file a bug report.
+
+        Tip: keep the `[bug] ` prefix in the title and fill in the
+        rest with a short, specific summary.
 
   - type: textarea
     id: summary

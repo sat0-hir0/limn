@@ -1,7 +1,14 @@
 name: Feature request
 description: Propose a new feature or behavior change
+title: "[feat] "
 labels: [enhancement]
 body:
+  - type: markdown
+    attributes:
+      value: |
+        Tip: keep the `[feat] ` prefix in the title and fill in the
+        rest with a short, specific summary.
+
   - type: textarea
     id: motivation
     attributes:

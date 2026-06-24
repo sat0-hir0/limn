@@ -36,6 +36,23 @@ pre-push:
       # Run gate so any baseline regression shows up in the terminal
       # before CI catches it.
       run: cargo run -p debt-scan --quiet -- gate || true
+    # ----- OSS-operating verifiers (ADR / changelog / commit / docs) -----
+    # These guard the project's published conventions (ADR governance,
+    # CHANGELOG immutability, Conventional Commits, English docs).
+    # Personal verifiers (layer / panic / unsafe / pedantic / etc.) live
+    # in the maintainer's dotfiles, not here.
+    adr-consistency:
+      run: bash scripts/verify/adr-consistency-check.sh
+    changelog-untouched:
+      run: bash scripts/verify/changelog-untouched-check.sh
+    doc-language:
+      run: bash scripts/verify/doc-language-check.sh
+    conventional-commits-check:
+      run: bash scripts/verify/conventional-commits-check.sh
+    skills-self-check:
+      # Meta-verifier: confirms every SKILL.md has the canonical
+      # shape and every $skill-name cross-reference resolves.
+      run: bash scripts/verify/skills-self-check.sh
 
 commit-msg:
   commands:

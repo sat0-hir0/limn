@@ -73,10 +73,38 @@ is **optional** and **not required to be disclosed**.
 Per-tool personal areas (`.claude/`, `.cursor/`, `.codex/`, `.gemini/`)
 are gitignored and treated as developer-local — do not commit them.
 
+## AI operating skills
+
+A small set of repo-internal AI skills lives under
+[`.skillshare/`](.skillshare/OVERVIEW.md). These cover **OSS operating
+procedures only** — ADR governance, release flow, Conventional Commits,
+and the English-only doc rule. Personal verifiers and orchestrators are
+not committed here; maintainers keep those in their own dotfiles.
+
+Skills are **optional** for contributors. The hard quality gates run
+through `lefthook` (pre-push) and CI and do not require any AI tool.
+
+| When working on… | Read first | Then invoke |
+|---|---|---|
+| New design judgement | `docs/adr/*.md`, `ARCHITECTURE.md` Open Questions | `$adr-proposal` |
+| Promoting an ADR | `docs/adr/NNNN.md` | `$adr-acceptance` |
+| Public-behaviour changes (new `pub mod`, new `[[bin]]`, argv / Launch enum changes) | `docs/adr/`, `docs/adr/template.md` | `$adr-required-check` (advisory) → `$adr-proposal` if signal stands |
+| ADR consistency drift suspected | `docs/adr/` | `$adr-consistency-check` |
+| Commit / branch / PR title | `docs/development/git-strategy.md` | `$conventional-commits-check` |
+| `CHANGELOG.md` change suspected | `CHANGELOG.md` | `$changelog-untouched-check` |
+| Committed Markdown language | `docs/design/testing-strategy.md` | `$doc-language-check` |
+| release-please PR appears | `docs/maintainer-runbook/release-public.md` | `$release-preparation` → `$release-confirmation` → `$post-release-followup` |
+
+Each skill is self-contained at `.skillshare/skills/<group>/<name>/SKILL.md`;
+machine execution lives under `scripts/verify/` and `scripts/release/`.
+See [ADR-0004](docs/adr/0004-scope-skillshare-to-oss-operations.md)
+for the scope rationale.
+
 ## Where to look next
 
+- [`.skillshare/OVERVIEW.md`](.skillshare/OVERVIEW.md) — AI operating skills (optional)
 - [`ARCHITECTURE.md`](ARCHITECTURE.md) — architecture overview, code map, cross-cutting concerns
-- [`docs/adr/`](docs/adr/) — architecture decision records (gpui, 3-crate layering, GPL contamination)
+- [`docs/adr/`](docs/adr/) — architecture decision records (gpui, 3-crate layering, GPL contamination, AI skills)
 - [`docs/design/testing-strategy.md`](docs/design/testing-strategy.md) — testing approach
 - [`docs/design/basic-features.md`](docs/design/basic-features.md) — basic editor feature inventory
 - [`docs/README.md`](docs/README.md) — map of everything under `docs/`

@@ -307,7 +307,7 @@ mod tests {
     fn ignores_todo_marker_in_skill_doc() {
         let mut c = counts();
         scan_line(
-            Path::new(".skillshare/skills/commit-message/SKILL.md"),
+            Path::new(".skillshare/skills/design/adr-proposal/SKILL.md"),
             0,
             "## TODO checklist",
             "md",

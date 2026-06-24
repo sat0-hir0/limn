@@ -54,7 +54,7 @@ fn main() {
                 })
             },
         )
-        .expect("opening the main window should succeed");
+        .expect("opening the main window should succeed"); // limn:allow-panic: window creation failure is unrecoverable at startup
         cx.activate(true);
     });
 }

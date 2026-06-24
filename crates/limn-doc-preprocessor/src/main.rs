@@ -7,7 +7,7 @@
 ///    and every non-special file starts with `NNNN-`.
 /// 4. ADR cross-refs — `ADR-NNNN` references inside ADR files must point to real files.
 ///
-/// Controlled via LIMN_DOC_LINT env var:
+/// Controlled via the `LIMN_DOC_LINT` env var:
 /// - (unset / "error") → validation failure causes exit(1)
 /// - "warn"            → print warning but exit 0 (useful for local iteration)
 use std::{
@@ -61,7 +61,7 @@ fn main() {
 
     // mdBook calls the preprocessor with `supports <renderer>` first.
     if args.len() > 1 && args[1] == "supports" {
-        let renderer = args.get(2).map(String::as_str).unwrap_or("");
+        let renderer = args.get(2).map_or("", String::as_str);
         if renderer == "html" {
             process::exit(0);
         } else {
@@ -139,8 +139,7 @@ fn validate(ctx: &LiteContext, book: &Value) -> Vec<String> {
     let repo_root = ctx
         .src
         .parent()
-        .map(|p| ctx.root.join(p))
-        .unwrap_or_else(|| ctx.root.clone());
+        .map_or_else(|| ctx.root.clone(), |p| ctx.root.join(p));
 
     let mut errors: Vec<String> = Vec::new();
 
@@ -173,9 +172,9 @@ fn collect_chapters(book: &Value) -> Vec<Chapter> {
     chapters
 }
 
-/// Walk a JSON array of BookItem variants and append every Chapter to
-/// `out`, descending into sub_items recursively. Each BookItem comes in
-/// as `{ "Chapter": { ... } }`, `{ "Separator": null }`, or
+/// Walk a JSON array of `BookItem` variants and append every `Chapter`
+/// to `out`, descending into `sub_items` recursively. Each `BookItem`
+/// comes in as `{ "Chapter": { ... } }`, `{ "Separator": null }`, or
 /// `{ "PartTitle": "..." }`.
 fn collect_from_items(items: &[Value], out: &mut Vec<Chapter>) {
     for item in items {
@@ -373,7 +372,10 @@ fn check_adr_sequence(repo_root: &Path) -> Vec<String> {
 
     for entry in entries.flatten() {
         let name = entry.file_name().to_string_lossy().to_string();
-        if !name.ends_with(".md") {
+        if !Path::new(&name)
+            .extension()
+            .is_some_and(|ext| ext.eq_ignore_ascii_case("md"))
+        {
             continue;
         }
         if special.contains(name.as_str()) {

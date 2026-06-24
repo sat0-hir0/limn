@@ -40,7 +40,7 @@ pub fn parse(md: &str) -> Vec<Block> {
 /// Always panics — the implementation lands in M2.
 #[must_use]
 pub fn serialize(_blocks: &[Block]) -> String {
-    unimplemented!("serialize: lands in M2 together with the real parser")
+    unimplemented!("serialize: lands in M2 together with the real parser") // limn:allow-panic: M2 placeholder
 }
 
 /// Returns `(level, text)` if `line` is an ATX heading, else `None`.

@@ -53,3 +53,4 @@ See [`docs/adr/README.md`](adr/README.md) for details.
 | ADR-0001 | Adopt gpui as the GUI framework | Accepted |
 | ADR-0002 | Adopt a three-crate layered architecture | Accepted |
 | ADR-0003 | Temporarily accept GPL contamination | Accepted |
+| ADR-0004 | Scope `.skillshare/` skills to OSS operating procedures | Accepted |

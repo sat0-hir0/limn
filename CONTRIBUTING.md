@@ -78,6 +78,17 @@ Use `!` or a `BREAKING CHANGE:` footer. release-please triggers a major version 
 
 Do not edit `CHANGELOG.md` by hand — release-please updates it via PR.
 
+## AI operating skills (optional)
+
+This repo ships a small set of AI operating skills under
+[`.skillshare/`](.skillshare/OVERVIEW.md) for maintainers using AI
+coding tools, distributed via the
+[skillshare](https://github.com/runkids/skillshare) sync utility.
+Contributors **may** use them, but they are not required — the
+standard contribution flow above does not depend on them. See
+[ADR-0004](docs/adr/0004-scope-skillshare-to-oss-operations.md) for
+context.
+
 ## AI tooling (optional)
 
 This repo ships with vendor-neutral AI development scaffolding. Using any of

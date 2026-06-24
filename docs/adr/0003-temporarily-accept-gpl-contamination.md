@@ -13,13 +13,17 @@ As a consequence of adopting gpui (→ ADR-0001), the following transitive
 dependency chain exists:
 
 ```
-gpui
-  └── sum_tree
-        └── ztracing
-              └── zlog  ← GPL-3.0-or-later
+gpui            (Apache-2.0)
+  └── sum_tree  (Apache-2.0)
+        └── ztracing       ← GPL-3.0-or-later
+              └── ztracing_macro  ← GPL-3.0-or-later
+              └── zlog            ← GPL-3.0-or-later
 ```
 
-`zlog` is `GPL-3.0-or-later`.
+`sum_tree` itself is `Apache-2.0`; the GPL surface starts at
+`ztracing` (and its sibling `ztracing_macro`) and continues into
+`zlog`. The cargo-deny configuration (`deny.toml`) covers exactly
+these three GPL crates and no others.
 GPL-3.0 and Apache-2.0 are compatible, but with a directional constraint:
 
 - Apache-2.0 code may be incorporated into a GPL-3.0 project.

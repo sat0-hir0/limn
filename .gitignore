@@ -14,13 +14,23 @@
 .DS_Store
 Thumbs.db
 
-# AI tool personal areas (synced by skillshare or local tool setup)
-# The vendor-neutral source of truth lives under .skillshare/.
+# Per-vendor AI tool personal areas (synced from .skillshare/ via the
+# skillshare tool — not committed). The vendor-neutral source of truth
+# for committed skills lives under .skillshare/skills/.
 .claude/
 .cursor/
 .codex/
 .gemini/
 .agents/
+
+# Per-developer state that should not be shared. Personal verifiers
+# and orchestrators live in the maintainer's own dotfiles (see
+# ADR-0004); anything they write back into the repo lands here and
+# stays local.
+.skillshare/records/
+.skillshare/agents/
+.skillshare/logs/
+.skillshare/maintainer-notes/
 
 # Per-developer local overrides for AGENTS-style memory files.
 # CLAUDE.md (committed) imports AGENTS.md; CLAUDE.local.md is appended

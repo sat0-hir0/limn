@@ -54,3 +54,4 @@ See [`docs/adr/README.md`](adr/README.md) for details.
 | ADR-0002 | Adopt a three-crate layered architecture | Accepted |
 | ADR-0003 | Temporarily accept GPL contamination | Accepted |
 | ADR-0004 | Scope `.skillshare/` skills to OSS operating procedures | Accepted |
+| ADR-0005 | Register the app icon at runtime and embed it in the Windows `.exe`, defer packaging to M5 | Proposed |

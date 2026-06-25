@@ -61,7 +61,7 @@ This ADR does not resolve any `ARCHITECTURE.md` Open Question.
 ## Decision
 
 **We defer the macOS Dock icon until either gpui exposes a runtime
-icon API or M5 ships the `.app` bundle. Wave 1 ships every other
+icon API or packaging ships the `.app` bundle. Wave 1 ships every other
 runtime surface (Windows title bar, Windows task bar, Windows Alt+Tab,
 Explorer, X11 window decorations, X11 task list) through the
 combination of the executable resource embed and
@@ -86,9 +86,9 @@ when either:
 - gpui upstream adds a public `set_application_icon` (or equivalent)
   that the macOS backend bridges to
   `NSApplication.applicationIconImage`; or
-- M5 ships the `.app` bundle, at which point Finder, Spotlight and
-  Dock all read the icon from `Contents/Resources/Limn.icns` without
-  any runtime call.
+- packaging ships the `.app` bundle, at which point Finder, Spotlight
+  and Dock all read the icon from `Contents/Resources/Limn.icns`
+  without any runtime call.
 
 We make this decision because:
 
@@ -99,9 +99,9 @@ We make this decision because:
 - The macOS Dock cannot be reached without either forking gpui or
   violating the workspace `unsafe_code` lint, both of which are
   disproportionate for one cosmetic surface.
-- M5 already owns macOS bundling. Folding the deferred Dock icon
-  into that milestone matches the packaging boundary ADR-0005 itself
-  draws.
+- The packaging milestone already owns macOS bundling. Folding the
+  deferred Dock icon into that milestone matches the packaging
+  boundary ADR-0005 itself draws.
 
 ---
 
@@ -178,10 +178,10 @@ We make this decision because:
   right place to record a gpui pin bump is a separate ADR scoped to
   that bump.
 
-### Alternative C: Defer the entire Wave 1 until M5
+### Alternative C: Defer the entire Wave 1 until packaging
 
 - **Summary**: Withdraw ADR-0005 in its entirety and wait for the
-  M5 packaging milestone to wire up all icon paths together.
+  packaging milestone to wire up all icon paths together.
 - **Reason for rejection**: The Windows `.exe` embed (which the
   Wave 1 acceptance test showed reaches both Explorer and the
   runtime title bar) and the X11 runtime icon both work today with

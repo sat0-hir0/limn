@@ -1,4 +1,4 @@
-# ADR-0005: Register the app icon at runtime and embed it in the Windows `.exe`, defer packaging to M5
+# ADR-0005: Register the app icon at runtime and embed it in the Windows `.exe`, defer packaging
 
 - **Status**: Accepted
 - **Date**: 2026-06-25
@@ -30,10 +30,11 @@ Alt+Tab, and the GNOME / KDE application list. For a v0.1.x release this
 is a visible regression against the project's "quiet UI" axis
 (ARCHITECTURE.md §Design Axes).
 
-`assets/README.md` already states that wiring "is planned for M5" — the
-packaging milestone. The decision recorded here is whether to honour
-that schedule strictly or to bring forward the subset of work that does
-not depend on a packaging pipeline.
+`assets/README.md` already states that the macOS / Windows / Linux
+wiring is "planned for packaging" — the moment when Limn will ship as
+`.app`, MSIX, `.deb` and similar artefacts. The decision recorded here
+is whether to honour that schedule strictly or to bring forward the
+subset of work that does not depend on a packaging pipeline.
 
 The decision is constrained by:
 
@@ -62,7 +63,7 @@ overlap with icon registration.
 **We register the application icon at runtime now, and embed it as a
 Windows executable resource at build time now. We defer all packaging
 artefacts (installers, `.app` bundles, `.deb` / `.rpm`, code signing,
-notarisation) to the M5 packaging milestone, unchanged.**
+notarisation) to a future packaging milestone, unchanged.**
 
 Concretely, the runtime / embed work scoped here covers:
 
@@ -88,9 +89,9 @@ We make this decision because:
   icon-bearing first-class native application is exactly the kind of
   surface "quiet UI" expects to be invisibly correct, not blank.
 - The remaining packaging work (installer scripting, signing keys,
-  notarisation flow) is what genuinely belongs to M5 — it requires
-  product decisions (distribution channel, certificate ownership) that
-  are not yet made.
+  notarisation flow) is what genuinely belongs to the packaging
+  milestone — it requires product decisions (distribution channel,
+  certificate ownership) that are not yet made.
 
 The wiring stays inside `limn-ui` to preserve ADR-0002's layer
 boundary. `limn-core` and `limn-service` continue to know nothing about
@@ -107,10 +108,10 @@ icons or packaging.
   visible "is this a real app?" gap at v0.1.x cost.
 - On macOS and Linux, the running window shows the Limn mark in Dock /
   Alt-Tab / Activities once gpui's icon surface is wired, without
-  waiting for `.app` or `.desktop` packaging.
+  waiting for `.app` or `.desktop` packaging artefacts.
 - The `assets/appicons/` material starts paying for itself immediately
   rather than waiting one milestone.
-- The packaging decisions deferred to M5 (signing, notarisation,
+- The packaging decisions still deferred (signing, notarisation,
   installer choice) remain free to be made in their own context, with
   the artwork pipeline already proven.
 
@@ -119,9 +120,9 @@ icons or packaging.
 - One new build dependency (`winresource`) enters the graph. It is
   BSD-2-Clause, build-time only, and does not appear in the shipped
   binary, but the workspace `Cargo.lock` grows.
-- macOS users still see a generic icon in Finder until M5 ships the
-  `.app` bundle, because Finder reads `.icns` from a bundle, not from
-  the binary. The runtime Dock icon will be correct; the Finder file
+- macOS users still see a generic icon in Finder until packaging ships
+  the `.app` bundle, because Finder reads `.icns` from a bundle, not
+  from the binary. The runtime Dock icon will be correct; the Finder file
   icon will not. This asymmetry must be documented in release notes.
 - Linux distributions that install the binary without a `.desktop` file
   will likewise see no application-launcher entry. The runtime window
@@ -136,20 +137,20 @@ icons or packaging.
   layered architecture is preserved.
 - No change to the licence story: artwork is Apache-2.0 (see
   `assets/README.md`), `winresource` is BSD-2-Clause, both permissive.
-- The M5 packaging milestone shrinks slightly in scope (the artwork
+- The packaging milestone shrinks slightly in scope (the artwork
   pipeline is already validated) but does not change in nature.
 
 ---
 
 ## Considered Alternatives
 
-### Alternative A: Do nothing until M5
+### Alternative A: Do nothing until packaging
 
 - **Summary**: Honour `assets/README.md` verbatim and wire icons up
   only when the packaging milestone arrives.
 - **Reason for rejection**: Leaves a visible quality gap during the
   entire v0.1.x window for no engineering payoff. The runtime / embed
-  work does not depend on any M5-shaped decision (signing,
+  work does not depend on any packaging-shaped decision (signing,
   distribution channel), so deferring it just defers user-visible
   polish that is already paid for in artwork.
 
@@ -169,7 +170,7 @@ icons or packaging.
 ### Alternative C: Embed in the Windows `.exe` only, skip runtime API
 
 - **Summary**: Ship the Windows resource embed, leave macOS and Linux
-  with the placeholder runtime icon until M5.
+  with the placeholder runtime icon until packaging.
 - **Reason for rejection**: The runtime icon path through gpui costs
   roughly the same as the Windows embed once the artwork is in place,
   and it benefits all three platforms. Skipping it leaves the macOS
@@ -182,8 +183,8 @@ icons or packaging.
 ## Links
 
 - [`assets/README.md`](../../assets/README.md) — artwork inventory and
-  packaging plan note (the "planned for M5" line this ADR partially
-  rolls back).
+  packaging plan note (the "planned for packaging" line this ADR
+  partially rolls back).
 - [`crates/limn-ui/src/main.rs`](../../crates/limn-ui/src/main.rs) — the
   `WindowOptions` site that the runtime portion will touch.
 - ADR-0001: Adopt gpui as the GUI Framework — defines the runtime

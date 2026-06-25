@@ -56,7 +56,7 @@ This project uses the [MADR](https://adr.github.io/madr/) format.
 | [ADR-0002](0002-three-crate-layered-architecture.md) | Adopt a Three-Crate Layered Architecture | Accepted | 2026-06-21 |
 | [ADR-0003](0003-temporarily-accept-gpl-contamination.md) | Temporarily Accept GPL Contamination | Accepted | 2026-06-21 |
 | [ADR-0004](0004-scope-skillshare-to-oss-operations.md) | Scope `.skillshare/` skills to OSS operating procedures | Accepted | 2026-06-23 |
-| [ADR-0005](0005-app-icon-runtime-and-embed.md) | Register the app icon at runtime and embed it in the Windows `.exe`, defer packaging to M5 | Accepted | 2026-06-25 |
+| [ADR-0005](0005-app-icon-runtime-and-embed.md) | Register the app icon at runtime and embed it in the Windows `.exe`, defer packaging | Accepted | 2026-06-25 |
 | [ADR-0006](0006-defer-runtime-icon-macos-windows.md) | Defer the macOS Dock icon until gpui exposes a runtime icon API | Accepted | 2026-06-25 |
 
 > This index is maintained by hand. We may switch to auto-generation via a tool such as `adr-log` in the future.

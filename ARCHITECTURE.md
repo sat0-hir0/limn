@@ -203,21 +203,9 @@ A transitive dependency of `gpui` (`sum_tree` → `ztracing` → `zlog`) is
 binary distribution time.
 
 Current decision: wait for the upstream issue ([zed-industries/zed#55470](https://github.com/zed-industries/zed/issues/55470))
-to be resolved. No re-evaluation until M5.
+to be resolved.
 
 → Details recorded in ADR-0003.
-
----
-
-## Milestone Overview
-
-| M | Goal | Status |
-|---|------|--------|
-| M1 | Read-only `.md` display (render one file in gpui) | In progress |
-| M2 | Keyboard editing + autosave | Not started |
-| M3 | `/` command palette (block insertion) | Not started |
-| M4 | `[[link]]` backlinks + graph view | Not started |
-| M5 | AI integration (selection → summarize / continue) | Not started |
 
 ---
 
@@ -251,4 +239,4 @@ Performance characteristics as node count grows.
 
 ### IME Quality
 
-The quality of gpui's Japanese IME support is not yet established. Real-device verification is needed early in M2.
+The quality of gpui's Japanese IME support is not yet established. Real-device verification is needed when editing arrives.

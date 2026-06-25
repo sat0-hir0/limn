@@ -57,15 +57,14 @@ Commit the resulting `limn.ico` alongside the PNGs.
 
 - **macOS (`.app` bundle)**: combine `assets/appicons/macos/*.png`
   with `iconutil` to produce `Limn.icns`, then drop it into
-  `Limn.app/Contents/Resources/`. Wired up during packaging (planned
-  for M5).
+  `Limn.app/Contents/Resources/`. Wired up during packaging.
 - **Windows (`.exe` / MSIX)**: combine `assets/appicons/windows/*.png`
   with `ImageMagick` (`magick convert ... Limn.ico`) or
-  `rcedit`. Wired up during packaging (planned for M5).
+  `rcedit`. Wired up during packaging.
 - **Linux (`.desktop` + hicolor)**: copy `assets/appicons/linux/*.png`
   into `/usr/share/icons/hicolor/<size>/apps/limn.png` at install
   time. SVG can be used directly at `scalable/apps/limn.svg`. Wired
-  up during packaging (planned for M5).
+  up during packaging.
 - **Inside the running app**:
   - **X11 (Linux / FreeBSD)**: wired at runtime via
     `WindowOptions::icon`, which gpui's X11 backend honours. The PNG is
@@ -78,8 +77,8 @@ Commit the resulting `limn.ico` alongside the PNGs.
     gpui's Windows backend.
   - **macOS / Wayland window title-bar / Dock**: not wired in the
     running app — gpui does not yet expose a cross-platform icon
-    surface for these. The Dock icon arrives with the `.app` bundle at
-    M5; see [`ADR-0006`](../docs/adr/0006-defer-runtime-icon-macos-windows.md).
+    surface for these. The Dock icon arrives with the `.app` bundle
+    during packaging; see [`ADR-0006`](../docs/adr/0006-defer-runtime-icon-macos-windows.md).
 
 ## Licence
 

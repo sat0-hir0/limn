@@ -13,6 +13,24 @@ limn-core = { path = "../limn-core" }
 limn-service = { path = "../limn-service" }
 gpui = { workspace = true }
 gpui_platform = { workspace = true }
+# Used on Linux / FreeBSD to decode the bundled PNG into the
+# `RgbaImage` expected by gpui's `WindowOptions::icon`. Pinned to the
+# 0.25 line to match gpui's own workspace pin.
+#
+# `default-features = false` + `features = ["png"]` records the
+# *minimum* this crate needs by itself. In the actual build graph
+# Cargo's feature unification merges this with gpui's own
+# `image = "0.25"` (= default features on), so the compiled artifact
+# ships every image format gpui enables — we are not gaining a
+# slimmer build by being conservative here, only documenting intent.
+image = { version = "0.25", default-features = false, features = ["png"] }
+
+[build-dependencies]
+# Embeds the Limn `.ico` into `limn-ui.exe` on Windows targets so
+# Explorer / taskbar / Alt+Tab show the brand mark instead of a
+# generic placeholder. BSD-2-Clause, build-time only, does not enter
+# the runtime artifact (see ADR-0005).
+winresource = "0.1"
 
 [dev-dependencies]
 # Need the `test-support` feature so `#[gpui::test]` resolves

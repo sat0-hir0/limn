@@ -42,9 +42,26 @@ fn main() {
 
     application().run(move |cx: &mut App| {
         let bounds = Bounds::centered(None, size(px(900.0), px(700.0)), cx);
+
+        // gpui's `WindowOptions::icon` is honoured on X11 (Linux /
+        // FreeBSD) and ignored elsewhere on the pinned revision
+        // (see ADR-0005, ADR-0006). Decoding the PNG on macOS /
+        // Windows would be wasted work, so we only build the icon on
+        // the platforms that consume it.
+        #[cfg(any(target_os = "linux", target_os = "freebsd"))]
+        let window_icon: Option<std::sync::Arc<image::RgbaImage>> = {
+            const ICON_PNG: &[u8] = include_bytes!("../../../assets/appicons/linux/limn-256.png");
+            image::load_from_memory(ICON_PNG)
+                .ok()
+                .map(|img| std::sync::Arc::new(img.into_rgba8()))
+        };
+        #[cfg(not(any(target_os = "linux", target_os = "freebsd")))]
+        let window_icon: Option<std::sync::Arc<image::RgbaImage>> = None;
+
         cx.open_window(
             WindowOptions {
                 window_bounds: Some(WindowBounds::Windowed(bounds)),
+                icon: window_icon,
                 ..Default::default()
             },
             |_, cx| {

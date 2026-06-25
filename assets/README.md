@@ -35,6 +35,24 @@ sizes each platform asks for. To regenerate, open the SVG in any
 vector tool (Inkscape, Affinity Designer, Figma) and export at the
 desired pixel size.
 
+### Generating the Windows `.ico` bundle
+
+The `limn-ui` build script reads
+`assets/appicons/windows/limn.ico` and embeds it into `limn-ui.exe`
+on Windows targets. The `.ico` is a multi-image bundle of the PNGs
+in the same directory, kept in tree as a committed artifact (the
+build script does not regenerate it).
+
+Run the following [ImageMagick](https://imagemagick.org/) 7+ command
+from the repository root after editing the source PNGs:
+
+```sh
+magick assets/appicons/windows/limn-{256,128,64,48,32,24,16}.png \
+       assets/appicons/windows/limn.ico
+```
+
+Commit the resulting `limn.ico` alongside the PNGs.
+
 ## How to use
 
 - **macOS (`.app` bundle)**: combine `assets/appicons/macos/*.png`
@@ -48,8 +66,20 @@ desired pixel size.
   into `/usr/share/icons/hicolor/<size>/apps/limn.png` at install
   time. SVG can be used directly at `scalable/apps/limn.svg`. Wired
   up during packaging (planned for M5).
-- **Inside the running app**: the gpui `WindowOptions` may accept an
-  icon in a future release — wire it in then.
+- **Inside the running app**:
+  - **X11 (Linux / FreeBSD)**: wired at runtime via
+    `WindowOptions::icon`, which gpui's X11 backend honours. The PNG is
+    embedded directly with `include_bytes!` in
+    [`crates/limn-ui/src/main.rs`](../crates/limn-ui/src/main.rs).
+  - **Windows `.exe`**: the icon is embedded as an executable resource
+    via [`crates/limn-ui/build.rs`](../crates/limn-ui/build.rs) and
+    `winresource`, so Explorer, the task bar, and Alt+Tab use it. The
+    running window's title-bar icon is loaded from the same resource by
+    gpui's Windows backend.
+  - **macOS / Wayland window title-bar / Dock**: not wired in the
+    running app — gpui does not yet expose a cross-platform icon
+    surface for these. The Dock icon arrives with the `.app` bundle at
+    M5; see [`ADR-0006`](../docs/adr/0006-defer-runtime-icon-macos-windows.md).
 
 ## Licence
 

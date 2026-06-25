@@ -55,4 +55,4 @@ See [`docs/adr/README.md`](adr/README.md) for details.
 | ADR-0003 | Temporarily accept GPL contamination | Accepted |
 | ADR-0004 | Scope `.skillshare/` skills to OSS operating procedures | Accepted |
 | ADR-0005 | Register the app icon at runtime and embed it in the Windows `.exe`, defer packaging to M5 | Proposed |
-| ADR-0006 | Defer runtime title-bar and Dock icon on macOS and Windows until gpui exposes an icon surface | Proposed |
+| ADR-0006 | Defer the macOS Dock icon until gpui exposes a runtime icon API | Proposed |

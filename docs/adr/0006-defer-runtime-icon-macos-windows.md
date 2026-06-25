@@ -1,6 +1,6 @@
 # ADR-0006: Defer the macOS Dock icon until gpui exposes a runtime icon API
 
-- **Status**: Proposed
+- **Status**: Accepted
 - **Date**: 2026-06-25
 - **Deciders**: sat0-hir0
 

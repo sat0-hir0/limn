@@ -1,6 +1,6 @@
 # ADR-0005: Register the app icon at runtime and embed it in the Windows `.exe`, defer packaging to M5
 
-- **Status**: Proposed
+- **Status**: Accepted
 - **Date**: 2026-06-25
 - **Deciders**: sat0-hir0
 

@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.1](https://github.com/sat0-hir0/limn/compare/v0.1.0...v0.1.1) (2026-06-26)
+
+
+### Features
+
+* initial public release (v0.1.0) ([b92b852](https://github.com/sat0-hir0/limn/commit/b92b8521e6b4d0f27fff6ef0de1dc6ec22cf73e3))
+
 ## [0.1.0] - 2026-06-21
 
 ### Added

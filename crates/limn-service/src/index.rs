@@ -1,6 +1,6 @@
 //! Link index: parses `[[file]]`-style links and keeps a reverse map.
 //!
-//! M0: structure only. Implementation lands in M6 (links and backlinks milestone).
+//! Structure only — the link/backlink implementation is not yet provided.
 
 use std::collections::HashMap;
 use std::path::PathBuf;

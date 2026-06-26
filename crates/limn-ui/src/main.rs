@@ -1,9 +1,10 @@
 //! Limn UI bin.
 //!
-//! M1: boot a gpui application, open a single window, and render each
+//! Boots a gpui application, opens a single window, and renders each
 //! block as a row. With no argument it shows the embedded Welcome
 //! document (VS Code's welcome tab equivalent); with a path it loads
-//! that `.md` via `limn-service`. Read-only; editing lands in M2.
+//! that `.md` via `limn-service`. Read-only; editing is not yet
+//! implemented.
 
 use std::path::{Path, PathBuf};
 

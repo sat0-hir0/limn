@@ -1,9 +1,10 @@
-//! E2E render test for the M1 vertical slice.
+//! E2E render test for the current read-only vertical slice.
 //!
 //! Boots a headless gpui `TestAppContext`, opens a window backed by
 //! `DocumentView`, renders one frame, and asserts the title string the
 //! view exposes — the closest we can get to "the user saw 'Hello'" at
-//! the M1 testing surface. Driving real keyboard input lands in M2.
+//! the current testing surface. Real keyboard input is not exercised
+//! here yet.
 //!
 //! This test runs without a GPU because gpui's `TestPlatform` swaps
 //! the real display for an in-memory stub. If the gpui API moves

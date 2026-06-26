@@ -4,7 +4,7 @@
 //! separates the candidate Provider ("who produces candidates") from the
 //! Policy ("who decides when to show them").
 //!
-//! M0: traits only. Concrete implementations land in M3 and beyond.
+//! Traits only at present; concrete implementations are not yet wired.
 
 /// A single completion candidate — the smallest unit a provider returns.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -14,7 +14,7 @@ pub struct Candidate {
 }
 
 /// Input context, such as the text immediately preceding the cursor.
-/// M0 ships an empty placeholder struct.
+/// Currently an empty placeholder struct.
 #[derive(Debug, Clone, Default)]
 pub struct Context {
     pub preceding_text: String,

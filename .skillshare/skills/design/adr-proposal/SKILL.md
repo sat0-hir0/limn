@@ -16,8 +16,9 @@ description: Draft a new ADR under docs/adr/ as Status Proposed and route it thr
 Concrete Limn examples that warrant an ADR rather than a plain
 commit:
 
-- Choosing a property-test framework for the M2 round-trip corpus.
-- Picking the LLM API surface for M5 AI integration.
+- Choosing a property-test framework for the Markdown round-trip
+  corpus.
+- Picking the LLM API surface for AI integration.
 - Decoupling sum_tree from the GPL-tainted zlog chain (supersedes
   ADR-0003).
 - Reorganising a crate boundary not already covered by ADR-0002.

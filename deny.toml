@@ -27,8 +27,9 @@ allow = [
     "GPL-3.0-or-later",
 ]
 confidence-threshold = 0.93
-# Stay green when an allowed license is not used by any dep yet (M0 has
-# no external deps; the allow list is forward-looking for M1+).
+# Stay green when an allowed license is not used by any dep yet — the
+# allow list is forward-looking and may list licenses no current dep
+# actually carries.
 unused-allowed-license = "allow"
 
 [bans]

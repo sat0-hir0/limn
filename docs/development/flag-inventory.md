@@ -7,7 +7,7 @@ the same PR.
 
 | Flag | Env var | Stage | Added | Owner | Notes |
 |---|---|---|---|---|---|
-| (none) | — | — | — | — | No flags at v0.1.0. The first flag (`edit`) is expected with the M2 editing feature. |
+| (none) | — | — | — | — | No flags at v0.1.0. |
 
 ## Stage reference
 

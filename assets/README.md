@@ -39,17 +39,17 @@ desired pixel size.
 
 - **macOS (`.app` bundle)**: combine `assets/appicons/macos/*.png`
   with `iconutil` to produce `Limn.icns`, then drop it into
-  `Limn.app/Contents/Resources/`. Wired up during packaging (planned
-  for M5).
+  `Limn.app/Contents/Resources/`. Packaging is not yet wired up.
 - **Windows (`.exe` / MSIX)**: combine `assets/appicons/windows/*.png`
   with `ImageMagick` (`magick convert ... Limn.ico`) or
-  `rcedit`. Wired up during packaging (planned for M5).
+  `rcedit`. Packaging is not yet wired up.
 - **Linux (`.desktop` + hicolor)**: copy `assets/appicons/linux/*.png`
   into `/usr/share/icons/hicolor/<size>/apps/limn.png` at install
-  time. SVG can be used directly at `scalable/apps/limn.svg`. Wired
-  up during packaging (planned for M5).
-- **Inside the running app**: the gpui `WindowOptions` may accept an
-  icon in a future release — wire it in then.
+  time. SVG can be used directly at `scalable/apps/limn.svg`.
+  Packaging is not yet wired up.
+- **Inside the running app**: gpui's `WindowOptions` does not currently
+  expose an app-icon field; the icon files above are kept ready for when
+  that path is available.
 
 ## Licence
 
@@ -59,5 +59,5 @@ rest of Limn — **Apache-2.0** (see [`../LICENSE`](../LICENSE)).
 The artwork is composed of plain geometric shapes only; it does not
 embed any font binaries, so no font licence (e.g. SIL OFL) carries
 through. The brand wordmark (which *does* rely on IBM Plex Sans) is
-not included here and will arrive in a future commit, in outlined
-form so the same property holds.
+not included here. If a wordmark is ever added, it would need to
+ship in outlined form so the same property holds.

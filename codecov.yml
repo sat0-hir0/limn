@@ -1,9 +1,8 @@
 # Codecov configuration. https://docs.codecov.com/docs/codecov-yaml
 #
-# Coverage targets are "auto" while M1 is the only landed milestone —
-# we don't know what a reasonable steady-state number looks like yet.
-# Tighten once M2 lands a meaningful editing path and the body of
-# tests stabilises.
+# Coverage targets are currently "auto": the test suite is still
+# small and a reasonable steady-state percentage is unknown. Tighten
+# the thresholds once the body of tests stabilises.
 
 coverage:
   status:

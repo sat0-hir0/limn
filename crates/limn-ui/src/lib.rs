@@ -7,8 +7,8 @@ use gpui::{div, rgb, Context, IntoElement, ParentElement, Render, SharedString, 
 
 use limn_core::block::{Block, BlockKind};
 
-/// Read-only view of a parsed Markdown document. M1's only view; M2
-/// will introduce an editing-capable variant.
+/// Read-only view of a parsed Markdown document. Currently the only
+/// view; an editing-capable variant is not yet provided.
 pub struct DocumentView {
     pub title: SharedString,
     pub blocks: Vec<Block>,

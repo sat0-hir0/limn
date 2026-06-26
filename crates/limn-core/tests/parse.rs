@@ -1,5 +1,5 @@
-//! Integration tests for the M1 toy Markdown parser. Pairs with the
-//! unit tests inside `markdown.rs`; this file holds the slightly larger
+//! Integration tests for the toy Markdown parser. Pairs with the unit
+//! tests inside `markdown.rs`; this file holds the slightly larger
 //! samples that read more like real `.md` files.
 
 use limn_core::block::{Block, BlockKind};

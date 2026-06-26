@@ -4,9 +4,6 @@ name: mutants
 # to put on every PR, so this runs weekly on a cron and is also
 # triggerable on demand from the Actions tab. Results are uploaded as
 # an artifact; this workflow never fails the build.
-#
-# When test density grows (= M2 editing + the new parser), revisit this
-# and start trimming the missed-mutants list.
 
 on:
   schedule:

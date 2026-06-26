@@ -13,7 +13,8 @@ description: After a tag lands, confirm the GitHub Release, the artifacts, and t
 
 - GitHub Release exists with the expected CHANGELOG diff as notes.
 - Documentation site (GitHub Pages) reflects the tag.
-- Any per-platform artifact (later milestones) is present.
+- Any per-platform artifact, if any are produced for this tag, is
+  present.
 
 ## Phase 1: Tag and Release
 
@@ -32,7 +33,8 @@ description: After a tag lands, confirm the GitHub Release, the artifacts, and t
 
 ### Step 3-1: For each platform
 
-- **Decide**: skip until M5 packaging is in place.
+- **Decide**: skip when no per-platform packaging step is wired up
+  for this tag. Revisit once a packaging pipeline exists.
 
 ## Stop condition
 

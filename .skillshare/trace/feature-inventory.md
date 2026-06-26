@@ -11,7 +11,6 @@ Tracks the implementation status of each entry in
 | `Status` | `not-started` / `in-progress` / `done` / `deferred` |
 | `Impl` | File(s) under `crates/` implementing the feature |
 | `Test` | File(s) under `crates/*/tests/` covering the feature |
-| `Milestone` | `M1` / `M2` / `M3` / `M4` / `M5` |
 
 ## Entries
 

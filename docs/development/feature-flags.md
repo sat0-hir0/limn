@@ -139,7 +139,8 @@ fn env_truthy(name: &str) -> bool {
 
 Flags are read once at startup and accessed throughout the widget tree
 via `cx.global::<FeatureFlags>()`. At v0.1.0 there are no active flags
-(the struct itself is introduced in M2).
+and the aggregated struct is not yet introduced; the example above is
+the shape it will take when the first flag is added.
 
 ### Evolving to Stage 2
 

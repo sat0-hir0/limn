@@ -63,7 +63,7 @@ keeps branch names, PR titles, and commit messages consistent.
 | `perf/<topic>` | Performance improvement |
 | `ci/<topic>` | CI / Actions changes |
 
-`<topic>` is a short kebab-case slug (e.g. `feat/m2-editing`,
+`<topic>` is a short kebab-case slug (e.g. `feat/slash-palette`,
 `fix/wayland-startup`, `chore/bump-gpui-rev`).
 
 ### Branch lifetime
@@ -128,8 +128,8 @@ the release cycle:
 4. During 0.x: **minor bump covers both feature additions and breaking
    changes** (allowed by SemVer 0.x)
 5. **Patch (0.0.1 increments)** is reserved for bug fixes only
-6. **1.0.0** is cut when AI integration (M5) is complete, or at another
-   stability milestone
+6. **1.0.0** is cut when the maintainer judges the public API and
+   feature set stable enough to commit to SemVer guarantees
 
 ## History rewrite policy
 

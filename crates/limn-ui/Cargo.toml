@@ -13,6 +13,8 @@ limn-core = { path = "../limn-core" }
 limn-service = { path = "../limn-service" }
 gpui = { workspace = true }
 gpui_platform = { workspace = true }
+gpui-component = { workspace = true }
+gpui-component-assets = { workspace = true }
 
 [dev-dependencies]
 # Need the `test-support` feature so `#[gpui::test]` resolves

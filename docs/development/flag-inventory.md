@@ -7,7 +7,7 @@ the same PR.
 
 | Flag | Env var | Stage | Added | Owner | Notes |
 |---|---|---|---|---|---|
-| (none) | — | — | — | — | No flags at v0.1.0. The first flag (`edit`) is expected with the M2 editing feature. |
+| `edit` | `LIMN_FEAT_EDIT` | 1: hidden | M2 (Issue #3) | sat0-hir0 | Editable editor backed by `gpui-component` `InputState` (ADR-0005). Wave 1: input / cursor / selection / delete / copy-cut-paste / undo-redo / IME. Autosave is a later wave. |
 
 ## Stage reference
 

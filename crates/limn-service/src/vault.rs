@@ -17,6 +17,19 @@ pub struct Document {
     pub blocks: Vec<Block>,
 }
 
+/// The raw, unparsed UTF-8 text of a Markdown file and the path it came
+/// from.
+///
+/// The editable view (M2) seeds `gpui-component`'s `InputState` with raw
+/// text rather than a parsed `Vec<Block>` (see ADR-0005). This is the
+/// read path for that flow; `limn-ui` performs no direct `std::fs`
+/// (ADR-0002), so the raw read lives here.
+#[derive(Debug, Clone)]
+pub struct RawDocument {
+    pub path: PathBuf,
+    pub text: String,
+}
+
 /// Root of a vault — a directory full of `.md` files.
 #[derive(Debug, Clone)]
 pub struct Vault {
@@ -88,6 +101,25 @@ impl Vault {
         Ok(Document {
             path: path.to_path_buf(),
             blocks: markdown::parse(&text),
+        })
+    }
+
+    /// Read a specific `.md` path as raw UTF-8 text, without parsing it
+    /// into blocks.
+    ///
+    /// Used by the editable view (ADR-0005): the editor seeds its
+    /// `InputState` with the file's verbatim text. Keeping the read here
+    /// preserves the rule that `limn-ui` never touches `std::fs`
+    /// directly (ADR-0002).
+    ///
+    /// # Errors
+    ///
+    /// Returns [`OpenError::Io`] if the file can't be read.
+    pub fn open_path_raw(path: &Path) -> Result<RawDocument, OpenError> {
+        let text = fs::read_to_string(path)?;
+        Ok(RawDocument {
+            path: path.to_path_buf(),
+            text,
         })
     }
 }

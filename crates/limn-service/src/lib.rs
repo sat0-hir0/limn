@@ -9,4 +9,4 @@
 pub mod index;
 pub mod vault;
 
-pub use vault::{Document, OpenError, Vault};
+pub use vault::{Document, OpenError, RawDocument, Vault};

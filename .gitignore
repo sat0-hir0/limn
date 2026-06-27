@@ -10,6 +10,9 @@
 .vscode/
 *.swp
 
+# AI tooling per-developer areas (see AGENTS.md)
+.serena/
+
 # OS
 .DS_Store
 Thumbs.db

@@ -56,5 +56,6 @@ This project uses the [MADR](https://adr.github.io/madr/) format.
 | [ADR-0002](0002-three-crate-layered-architecture.md) | Adopt a Three-Crate Layered Architecture | Accepted | 2026-06-21 |
 | [ADR-0003](0003-temporarily-accept-gpl-contamination.md) | Temporarily Accept GPL Contamination | Accepted | 2026-06-21 |
 | [ADR-0004](0004-scope-skillshare-to-oss-operations.md) | Scope `.skillshare/` skills to OSS operating procedures | Accepted | 2026-06-23 |
+| [ADR-0005](0005-adopt-gpui-component-input-and-autosave-raw-text.md) | Adopt gpui-component `InputState` for editing and autosave raw text | Proposed | 2026-06-28 |
 
 > This index is maintained by hand. We may switch to auto-generation via a tool such as `adr-log` in the future.

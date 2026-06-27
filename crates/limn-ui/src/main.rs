@@ -77,9 +77,21 @@ fn run_read_only(flags: FeatureFlags) {
 /// file's raw text. `gpui-component` needs its bundled [`Assets`], a
 /// `gpui_component::init`, and a [`Root`] as the window's first view.
 fn run_editable(flags: FeatureFlags) {
-    let raw = match std::env::args().nth(1) {
-        Some(arg) => load_raw_document(&PathBuf::from(arg)),
-        None => Ok(welcome_raw_document()),
+    // No argv = the embedded Welcome document, which is ephemeral and has
+    // no backing file. A path argument means a real file on disk. Only
+    // the latter has a save target; the former autosaves to `None` so
+    // edits to Welcome never write a stray file to the working directory.
+    let (raw, save_path) = match std::env::args().nth(1) {
+        Some(arg) => match load_raw_document(&PathBuf::from(arg)) {
+            // Save back to the resolved path (a directory input resolves
+            // to the first `.md` inside it), not the raw argv string.
+            Ok(d) => {
+                let resolved = d.path.clone();
+                (Ok(d), Some(resolved))
+            }
+            Err(e) => (Err(e), None),
+        },
+        None => (Ok(welcome_raw_document()), None),
     };
     let raw = match raw {
         Ok(d) => d,
@@ -90,6 +102,7 @@ fn run_editable(flags: FeatureFlags) {
     };
 
     let title = file_title(&raw.path);
+    let path = save_path;
     let text: SharedString = raw.text.into();
 
     application().with_assets(Assets).run(move |cx: &mut App| {
@@ -105,7 +118,9 @@ fn run_editable(flags: FeatureFlags) {
 
         cx.spawn(async move |cx| {
             cx.open_window(window_options, |window, cx| {
-                let editor = cx.new(|cx| EditorView::new(title.clone(), text.clone(), window, cx));
+                let editor = cx.new(|cx| {
+                    EditorView::new(title.clone(), path.clone(), text.clone(), window, cx)
+                });
                 // Focus the editor so the first keystroke lands in
                 // the buffer without a click.
                 editor.update(cx, |view, cx| view.focus(window, cx));

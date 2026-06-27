@@ -91,3 +91,59 @@ fn given_a_missing_path_when_open_path_then_io_error() {
 
     assert!(matches!(err, OpenError::Io(_)));
 }
+
+#[test]
+fn given_raw_text_when_save_raw_then_round_trips_through_disk() {
+    let dir = tempdir().unwrap();
+    let path = dir.path().join("note.md");
+    fs::write(&path, "# Old\n\nold body\n").unwrap();
+
+    let new_text = "# New\n\nedited body with unicode: café 日本語\n";
+    Vault::save_raw(&path, new_text).unwrap();
+
+    // Read back the bytes verbatim — autosave must not mangle the text.
+    let on_disk = fs::read_to_string(&path).unwrap();
+    assert_eq!(on_disk, new_text);
+
+    // And the service's own raw-read path agrees.
+    let reread = Vault::open_path_raw(&path).unwrap();
+    assert_eq!(reread.text, new_text);
+}
+
+#[test]
+fn given_a_new_path_when_save_raw_then_file_is_created() {
+    let dir = tempdir().unwrap();
+    let path = dir.path().join("fresh.md");
+
+    Vault::save_raw(&path, "brand new\n").unwrap();
+
+    assert_eq!(fs::read_to_string(&path).unwrap(), "brand new\n");
+}
+
+#[test]
+fn given_sequential_saves_when_save_raw_then_last_write_wins_and_no_temp_litter() {
+    // NOTE: this verifies *sequential* (synchronous, back-to-back) saves
+    // only — the last call's contents win and no temp sidecar is left
+    // behind. It does not exercise *concurrent* writers racing on the
+    // same path; true concurrent last-write-wins is out of scope here.
+    let dir = tempdir().unwrap();
+    let path = dir.path().join("note.md");
+
+    Vault::save_raw(&path, "first\n").unwrap();
+    Vault::save_raw(&path, "second\n").unwrap();
+    Vault::save_raw(&path, "third\n").unwrap();
+
+    assert_eq!(fs::read_to_string(&path).unwrap(), "third\n");
+
+    // The atomic write should leave no temporary sidecar files behind.
+    let leftovers: Vec<_> = fs::read_dir(dir.path())
+        .unwrap()
+        .filter_map(Result::ok)
+        .map(|e| e.file_name().to_string_lossy().into_owned())
+        .filter(|name| name.contains(".limn-tmp."))
+        .collect();
+    assert!(
+        leftovers.is_empty(),
+        "temp files left behind: {leftovers:?}"
+    );
+}

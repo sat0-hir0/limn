@@ -122,6 +122,75 @@ impl Vault {
             text,
         })
     }
+
+    /// Write `text` back to `path` as raw UTF-8, replacing its contents.
+    ///
+    /// This is the write counterpart of [`open_path_raw`]: the editable
+    /// view (ADR-0005) autosaves its `InputState` buffer verbatim, with
+    /// no block round-trip. As with the read path, the actual `std::fs`
+    /// call lives here so `limn-ui` never touches the filesystem
+    /// directly (ADR-0002).
+    ///
+    /// The write is atomic from a *reader's* point of view: the text is
+    /// first written in full to a sibling temporary file, then renamed
+    /// over `path`. A concurrent reader therefore always observes either
+    /// the previous contents or the complete new ones, never a
+    /// half-written file. The temp file is created next to the
+    /// destination so the final `rename` stays on one filesystem (a
+    /// cross-device rename would fail).
+    ///
+    /// This does **not** guarantee crash durability: we deliberately do
+    /// not `fsync` the temp file (or the directory) before renaming.
+    /// Autosave fires frequently and unattended, and an `fsync` on every
+    /// keystroke-burst would be a heavy, repeated I/O cost for little
+    /// benefit — a power loss may lose the most recent unsynced save, but
+    /// the on-disk file is never corrupted. Reader-atomicity, not crash
+    /// durability, is the property we buy with the temp-file + rename.
+    ///
+    /// [`open_path_raw`]: Vault::open_path_raw
+    ///
+    /// # Errors
+    ///
+    /// Returns [`OpenError::Io`] if the temporary file can't be written
+    /// or the rename into place fails.
+    pub fn save_raw(path: &Path, text: &str) -> Result<(), OpenError> {
+        // Co-locate the temp file with the destination so `rename` is an
+        // intra-filesystem (atomic) move. Suffix it with the PID to avoid
+        // colliding with a concurrent writer's temp file.
+        let mut tmp = path.as_os_str().to_owned();
+        tmp.push(format!(".limn-tmp.{}", std::process::id()));
+        let tmp = PathBuf::from(tmp);
+
+        // Write the full contents, then drop the handle before renaming.
+        // If anything fails, best-effort remove the temp file so we don't
+        // leave litter next to the document.
+        if let Err(e) = write_temp(&tmp, text) {
+            let _ = fs::remove_file(&tmp);
+            return Err(e.into());
+        }
+        if let Err(e) = fs::rename(&tmp, path) {
+            let _ = fs::remove_file(&tmp);
+            return Err(e.into());
+        }
+        Ok(())
+    }
+}
+
+/// Write `text` to `path` in full, returning once `write_all` has handed
+/// every byte to the OS.
+///
+/// There is intentionally no `fsync`/`flush` here: `std::fs::File` does
+/// no userspace buffering, so a `flush()` would be a no-op, and a real
+/// `sync_all()` is deliberately omitted (see [`Vault::save_raw`] for the
+/// durability rationale). The bytes are in the OS page cache when this
+/// returns, which is enough for the subsequent rename to promote a
+/// complete file for any concurrent reader.
+fn write_temp(path: &Path, text: &str) -> io::Result<()> {
+    use io::Write as _;
+
+    let mut file = fs::File::create(path)?;
+    file.write_all(text.as_bytes())?;
+    Ok(())
 }
 
 fn first_md_in_dir(dir: &Path) -> Result<PathBuf, OpenError> {

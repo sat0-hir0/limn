@@ -6,6 +6,7 @@
 use std::fs;
 use std::io;
 use std::path::{Path, PathBuf};
+use std::sync::atomic::{AtomicU64, Ordering};
 
 use limn_core::block::Block;
 use limn_core::markdown;
@@ -46,6 +47,13 @@ pub struct RawDocument {
 pub struct Vault {
     pub root: PathBuf,
 }
+
+/// Process-wide monotonic counter making each [`Vault::save_raw`] temp
+/// file name unique within this process, on top of the PID. Two writers
+/// racing on the same destination `path` therefore never share a temp
+/// file. `Relaxed` is sufficient: we only need each `fetch_add` to return
+/// a distinct value, not any cross-thread ordering of other memory.
+static TEMP_SEQ: AtomicU64 = AtomicU64::new(0);
 
 /// Things that can go wrong opening a document.
 #[derive(Debug)]
@@ -180,6 +188,21 @@ impl Vault {
     /// destination so the final `rename` stays on one filesystem (a
     /// cross-device rename would fail).
     ///
+    /// The temp file name is unique *per write*, not merely per process:
+    /// it carries both the PID and a monotonic, process-wide counter
+    /// (`path.limn-tmp.<PID>.<counter>`). This protects two writers that
+    /// race on the *same* `path` within a single process — e.g. a
+    /// debounced background autosave and a synchronous on-switch flush
+    /// (ADR-0009) — from sharing one temp file. Without the counter, both
+    /// would `File::create` the same temp path; one could truncate the
+    /// other mid-write, and a partial temp could then be renamed over
+    /// `path`, briefly leaving it empty or corrupt. With a per-write temp,
+    /// each writer fills its *own* complete temp file and atomically
+    /// renames it into place, so `path` always ends up holding one
+    /// writer's full contents — never a torn mix. (Two concurrent writers
+    /// still race on rename *order*, but the loser's content is complete,
+    /// not damaged; last rename wins.)
+    ///
     /// This does **not** guarantee crash durability: we deliberately do
     /// not `fsync` the temp file (or the directory) before renaming.
     /// Autosave fires frequently and unattended, and an `fsync` on every
@@ -196,10 +219,14 @@ impl Vault {
     /// or the rename into place fails.
     pub fn save_raw(path: &Path, text: &str) -> Result<(), OpenError> {
         // Co-locate the temp file with the destination so `rename` is an
-        // intra-filesystem (atomic) move. Suffix it with the PID to avoid
-        // colliding with a concurrent writer's temp file.
+        // intra-filesystem (atomic) move. Suffix it with the PID *and* a
+        // process-wide monotonic counter so the name is unique per write:
+        // the PID separates other processes, the counter separates other
+        // writers inside *this* process that target the same `path` (see
+        // the `save_raw` doc comment for the race this guards against).
         let mut tmp = path.as_os_str().to_owned();
-        tmp.push(format!(".limn-tmp.{}", std::process::id()));
+        let seq = TEMP_SEQ.fetch_add(1, Ordering::Relaxed);
+        tmp.push(format!(".limn-tmp.{}.{seq}", std::process::id()));
         let tmp = PathBuf::from(tmp);
 
         // Write the full contents, then drop the handle before renaming.

@@ -88,6 +88,20 @@ window's view tree. Concretely:
    flush-before-repoint ordering airtight without an async round-trip
    that could interleave with the repoint.
 
+   Dropping the debounce `Task` cancels a still-*sleeping* timer, but it
+   cannot interrupt a background `save_raw` that is already mid-write (its
+   blocking body has no await point at which cooperative cancellation can
+   take effect). The synchronous on-switch flush and that in-flight
+   background save can therefore both write the **old** path at the same
+   time. Both write the *same* old buffer, so the winner's identity does
+   not matter — but to ensure the old path is never left empty or torn by
+   two writers sharing scratch space, `Vault::save_raw` now names its temp
+   file **uniquely per write** (PID + a process-wide monotonic counter),
+   not merely per process. Each writer fills its own complete temp file
+   and atomically renames it into place; last rename wins, and the loser's
+   content is complete rather than damaged. See the Consequences note
+   below — this is a *separate* guarantee from the `set_value` race fix.
+
 The palette stays a single `ListDelegate` with two modes (Commands,
 Files); confirming "Open File..." transitions to Files mode in place and
 flips the list to searchable. The editor is reached through a
@@ -107,9 +121,26 @@ flips the list to searchable. The editor is reached through a
 - Switching files is cheap and preserves editor identity (focus,
   undo-history reset by `set_value`, subscription), with no window/view
   rebuild and no flicker from re-creating the root.
-- The autosave race is closed by construction, not by timing: `set_value`
-  emitting no `Change`, plus flush-before-repoint, means neither the old
-  nor the new path can receive the wrong text.
+- Wave 6 ships **two distinct safety guarantees**, which are worth not
+  conflating:
+  1. **No wrong-path write (the NEW→OLD race).** `set_value` emits no
+     `Change`, and the flush runs before the repoint, so neither the old
+     nor the new path can ever receive the *other* file's text. This is
+     closed by construction, not by timing.
+  2. **No torn/empty file from same-path double-write.** The synchronous
+     on-switch flush and an in-flight background autosave can both write
+     the *same* old path concurrently (the background save's blocking body
+     cannot be cancelled mid-write). Naming each `save_raw` temp file
+     uniquely per write (PID + monotonic counter) means the two writers
+     never share scratch space, so the old path always lands on one
+     writer's *complete* contents — never empty or half-written.
+
+  These are separate axes: (1) is about *which path gets which text*; (2)
+  is about *integrity of a single path under two writers*. The reviewer's
+  [H-1] finding correctly identified that the original ADR text covered
+  only (1); the per-write temp name added in response covers (2). The
+  per-write temp name also hardens the ordinary autosave path, where a
+  fast keystroke burst could otherwise schedule overlapping writes.
 
 ### Negative / Trade-offs
 

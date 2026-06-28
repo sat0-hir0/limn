@@ -163,6 +163,14 @@ impl EditorView {
     ///    buffer without a click.
     pub fn open_file(&mut self, raw: RawDocument, window: &mut Window, cx: &mut Context<Self>) {
         // 1. Flush pending edits to the OLD path, then cancel the timer.
+        //    Dropping `pending_save` cooperatively cancels the debounce,
+        //    but cannot interrupt a background `save_raw` already mid-write
+        //    (its blocking body has no await point). That synchronous flush
+        //    and the in-flight background save can thus both target the OLD
+        //    path at once. They write the *same* (old) buffer, and each now
+        //    writes its own per-write temp file before an atomic rename (see
+        //    `Vault::save_raw`), so the OLD path always ends up with one
+        //    writer's complete contents — never an empty or torn file.
         self.flush_pending_save(cx);
         self.pending_save = Task::ready(());
 

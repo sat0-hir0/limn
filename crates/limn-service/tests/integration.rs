@@ -4,6 +4,7 @@
 //! testing strategy doc calls the main act.
 
 use std::fs;
+use std::thread;
 
 use limn_core::block::BlockKind;
 use limn_service::{OpenError, Vault};
@@ -165,6 +166,61 @@ fn given_sequential_saves_when_save_raw_then_last_write_wins_and_no_temp_litter(
     assert_eq!(fs::read_to_string(&path).unwrap(), "third\n");
 
     // The atomic write should leave no temporary sidecar files behind.
+    let leftovers: Vec<_> = fs::read_dir(dir.path())
+        .unwrap()
+        .filter_map(Result::ok)
+        .map(|e| e.file_name().to_string_lossy().into_owned())
+        .filter(|name| name.contains(".limn-tmp."))
+        .collect();
+    assert!(
+        leftovers.is_empty(),
+        "temp files left behind: {leftovers:?}"
+    );
+}
+
+#[test]
+fn given_concurrent_writers_on_one_path_when_save_raw_then_file_is_never_torn() {
+    // Two threads hammer the *same* destination path at once, each writing
+    // its own complete contents many times over. This is the in-process
+    // race the per-write temp name guards (Wave 6 [H-1]): a synchronous
+    // on-switch flush and a debounced background autosave can both target
+    // the old path. Because each `save_raw` writes its own unique temp
+    // file before an atomic rename, the destination must *always* hold one
+    // writer's full text — never an empty or half-written file.
+    const ITERS: usize = 400;
+
+    let dir = tempdir().unwrap();
+    let path = dir.path().join("note.md");
+
+    // Two distinct, full payloads of differing length so a torn write
+    // would be detectable as neither value (e.g. a truncated/empty read).
+    let a = "AAAA payload from writer one\n";
+    let b = "payload from writer two, deliberately a different length\n";
+    fs::write(&path, a).unwrap();
+
+    let writers = [a, b].map(|text| {
+        let path = path.clone();
+        thread::spawn(move || {
+            for _ in 0..ITERS {
+                Vault::save_raw(&path, text).unwrap();
+                // After every write the file must be a complete payload.
+                let on_disk = fs::read_to_string(&path).unwrap();
+                assert!(
+                    on_disk == a || on_disk == b,
+                    "torn/empty read observed: {on_disk:?}"
+                );
+            }
+        })
+    });
+    for w in writers {
+        w.join().unwrap();
+    }
+
+    // The final state is still one of the two complete payloads.
+    let final_text = fs::read_to_string(&path).unwrap();
+    assert!(final_text == a || final_text == b);
+
+    // No temp sidecar files survive the storm.
     let leftovers: Vec<_> = fs::read_dir(dir.path())
         .unwrap()
         .filter_map(Result::ok)

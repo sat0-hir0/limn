@@ -15,6 +15,10 @@ gpui = { workspace = true }
 gpui_platform = { workspace = true }
 gpui-component = { workspace = true }
 gpui-component-assets = { workspace = true }
+# Fuzzy matcher for the palette's "Open File" search. MPL-2.0 (already
+# in deny.toml's allow list) — chosen over zed's GPL-3.0 fuzzy crate to
+# keep GPL surface minimal (ADR-0003, ADR-0009).
+nucleo-matcher = "0.3"
 
 [dev-dependencies]
 # Need the `test-support` feature so `#[gpui::test]` resolves

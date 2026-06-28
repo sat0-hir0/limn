@@ -27,9 +27,9 @@ use gpui_component::input::{Input, InputEvent, InputState};
 use gpui_component::{Root, WindowExt as _};
 
 use crate::actions::TogglePalette;
-use crate::{FeatureFlags, PaletteView};
+use crate::{file_title, FeatureFlags, PaletteView};
 
-use limn_service::Vault;
+use limn_service::{RawDocument, Vault};
 
 /// How long to wait after the last keystroke before writing to disk.
 /// Long enough that continuous typing does not write on every character,
@@ -135,6 +135,79 @@ impl EditorView {
         self.state.update(cx, |state, cx| state.focus(window, cx));
     }
 
+    /// Switch the editor to a different file in place (Wave 6).
+    ///
+    /// Rather than tearing down and rebuilding the window's view tree,
+    /// we keep the same [`InputState`] entity and swap its buffer. This
+    /// is the "buffer swap" approach (ADR-0009): the editor, its focus
+    /// handle, and the change subscription all survive the switch.
+    ///
+    /// The ordering is load-bearing and guards against autosaving the
+    /// *new* text back to the *old* path:
+    ///
+    /// 1. **Flush the old file synchronously**, then drop the debounce
+    ///    timer. Any edit made just before the switch must reach the
+    ///    file it belongs to, and the still-sleeping debounced save
+    ///    (which captured the *old* `path` and old text) must be
+    ///    cancelled so it cannot fire after we repoint `self.path`.
+    /// 2. **Repoint `path` / `title` to the new file** before touching
+    ///    the buffer, so the field the change handler reads is already
+    ///    correct.
+    /// 3. **Swap the buffer via [`InputState::set_value`]**, which sets
+    ///    `emit_events = false` around the replace (state.rs) and so
+    ///    does *not* emit [`InputEvent::Change`]. That is the core of
+    ///    the safety: seeding the new text never schedules a save, so
+    ///    there is no window in which the new text could be written to
+    ///    the old path.
+    /// 4. **Re-focus the editor** so typing lands in the freshly loaded
+    ///    buffer without a click.
+    pub fn open_file(&mut self, raw: RawDocument, window: &mut Window, cx: &mut Context<Self>) {
+        // 1. Flush pending edits to the OLD path, then cancel the timer.
+        self.flush_pending_save(cx);
+        self.pending_save = Task::ready(());
+
+        // 2. Repoint to the NEW file before the buffer changes.
+        self.path = Some(raw.path.clone());
+        self.title = file_title(&raw.path);
+
+        // 3. Swap the buffer. `set_value` does not emit `Change`, so no
+        //    save is scheduled against either path here.
+        self.state
+            .update(cx, |state, cx| state.set_value(raw.text, window, cx));
+
+        // 4. Focus so the first keystroke lands in the new buffer.
+        self.focus(window, cx);
+    }
+
+    /// Write the current buffer back to the current `path` synchronously,
+    /// if there is one.
+    ///
+    /// Called from [`open_file`] before switching away: the debounced
+    /// autosave may still be sleeping, so we force the most recent edits
+    /// to disk *now* while `self.path` still points at the file they
+    /// belong to. A `None` path (the ephemeral Welcome document) has no
+    /// save target, so this is a no-op there — matching `schedule_save`.
+    ///
+    /// This runs on the main thread, unlike the debounced autosave which
+    /// is dispatched to the background executor. ADR-0009 accepts this
+    /// as a deliberate, narrowly-scoped exception to ARCHITECTURE.md's
+    /// "never block the main thread" rule: a file switch is a discrete
+    /// user action (not a hot path), vault files are small Markdown
+    /// notes, and doing the flush inline is what makes the
+    /// flush-before-repoint ordering airtight without an async round-trip.
+    ///
+    /// [`open_file`]: EditorView::open_file
+    fn flush_pending_save(&mut self, cx: &mut Context<Self>) {
+        let Some(path) = self.path.clone() else {
+            return;
+        };
+        let text = self.state.read(cx).value().to_string();
+        match Vault::save_raw(&path, &text) {
+            Ok(()) => eprintln!("limn-ui: flushed on switch"),
+            Err(e) => eprintln!("limn-ui: flush on switch failed: {e}"),
+        }
+    }
+
     /// Handle the [`TogglePalette`] action: open the command palette
     /// modal, or close it if one is already open.
     ///
@@ -151,7 +224,8 @@ impl EditorView {
     #[expect(
         clippy::unused_self,
         reason = "signature is fixed by gpui's on_action listener contract; \
-                  the handler reads globals and the window, not self"
+                  the handler reads globals, the window, and the current \
+                  entity via cx, not self's fields"
     )]
     fn on_toggle_palette(
         &mut self,
@@ -168,7 +242,12 @@ impl EditorView {
             return;
         }
 
-        let palette = cx.new(|cx| PaletteView::new(window, cx));
+        // Hand the palette a weak handle back to this editor so its
+        // "Open File" confirm can swap the buffer (Wave 6). Weak avoids a
+        // reference cycle (editor → dialog → palette → editor) and lets
+        // the palette degrade gracefully if the editor is gone.
+        let editor = cx.entity().downgrade();
+        let palette = cx.new(|cx| PaletteView::new(editor, window, cx));
         window.open_dialog(cx, {
             let palette = palette.clone();
             move |dialog, _, _| {
@@ -195,6 +274,18 @@ impl EditorView {
     #[must_use]
     pub fn value(&self, cx: &Context<Self>) -> SharedString {
         self.state.read(cx).value()
+    }
+
+    /// The file the editor is currently backed by, or `None` for an
+    /// ephemeral document (the embedded Welcome).
+    ///
+    /// The palette uses this to derive the vault root for its "Open File"
+    /// listing: the directory holding the open file (Wave 6). A `None`
+    /// path means there is no vault to list, so the palette shows an empty
+    /// file search.
+    #[must_use]
+    pub fn current_path(&self) -> Option<&std::path::Path> {
+        self.path.as_deref()
     }
 
     /// React to the input widget's events. Only `Change` matters here:

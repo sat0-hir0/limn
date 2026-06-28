@@ -17,6 +17,17 @@ pub struct Document {
     pub blocks: Vec<Block>,
 }
 
+/// One `.md` file discovered in a vault directory listing.
+///
+/// `name` is the file name including its extension (e.g. `notes.md`),
+/// which is what the palette's fuzzy "Open File" search matches against
+/// and displays. `path` is the absolute path used to open the file.
+#[derive(Debug, Clone)]
+pub struct VaultEntry {
+    pub path: PathBuf,
+    pub name: String,
+}
+
 /// The raw, unparsed UTF-8 text of a Markdown file and the path it came
 /// from.
 ///
@@ -73,6 +84,36 @@ impl Vault {
     #[must_use]
     pub fn new(root: impl Into<PathBuf>) -> Self {
         Self { root: root.into() }
+    }
+
+    /// List every `.md` file directly under `self.root`, sorted
+    /// alphabetically by path.
+    ///
+    /// Subdirectories are not walked — this mirrors [`open_first_md`]'s
+    /// shallow scan and keeps the surface small until M3 needs a real
+    /// recursive walk. Non-`.md` files are excluded.
+    ///
+    /// Used by the palette's "Open File" fuzzy search (Wave 6): the
+    /// returned [`VaultEntry`] list is the search corpus.
+    ///
+    /// [`open_first_md`]: Vault::open_first_md
+    ///
+    /// # Errors
+    ///
+    /// Returns [`OpenError::Io`] if the directory can't be read.
+    pub fn list_md_files(&self) -> Result<Vec<VaultEntry>, OpenError> {
+        let paths = list_md_paths(&self.root)?;
+        Ok(paths
+            .into_iter()
+            .map(|path| {
+                let name = path
+                    .file_name()
+                    .and_then(|n| n.to_str())
+                    .unwrap_or_default()
+                    .to_string();
+                VaultEntry { path, name }
+            })
+            .collect())
     }
 
     /// Read the first `.md` file directly under `self.root` in
@@ -193,14 +234,23 @@ fn write_temp(path: &Path, text: &str) -> io::Result<()> {
     Ok(())
 }
 
-fn first_md_in_dir(dir: &Path) -> Result<PathBuf, OpenError> {
+/// Every `.md` file directly under `dir`, sorted alphabetically by path.
+///
+/// The single shallow-scan + filter + sort used by both
+/// [`Vault::list_md_files`] and [`first_md_in_dir`], so the two stay in
+/// lockstep on what counts as a vault `.md` file.
+fn list_md_paths(dir: &Path) -> Result<Vec<PathBuf>, OpenError> {
     let mut entries: Vec<PathBuf> = fs::read_dir(dir)?
         .filter_map(Result::ok)
         .map(|e| e.path())
         .filter(|p| p.is_file() && p.extension().and_then(|e| e.to_str()) == Some("md"))
         .collect();
     entries.sort();
-    entries
+    Ok(entries)
+}
+
+fn first_md_in_dir(dir: &Path) -> Result<PathBuf, OpenError> {
+    list_md_paths(dir)?
         .into_iter()
         .next()
         .ok_or_else(|| OpenError::NoMarkdownFile {

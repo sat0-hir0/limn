@@ -20,7 +20,7 @@ use gpui_platform::application;
 
 use limn_core::markdown;
 use limn_service::{Document, RawDocument, Vault};
-use limn_ui::{DocumentView, EditorView, FeatureFlags};
+use limn_ui::{file_title, DocumentView, EditorView, FeatureFlags};
 
 const WELCOME_MD: &str = include_str!("welcome.md");
 const WELCOME_TITLE: &str = "Welcome";
@@ -134,14 +134,6 @@ fn run_editable(flags: FeatureFlags) {
         })
         .detach();
     });
-}
-
-/// File name for the header strip, or `(unnamed)` when there is none.
-fn file_title(path: &Path) -> SharedString {
-    path.file_name()
-        .and_then(|n| n.to_str())
-        .map_or_else(|| "(unnamed)".to_string(), String::from)
-        .into()
 }
 
 fn load_document(path: &Path) -> Result<Document, limn_service::OpenError> {

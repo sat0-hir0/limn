@@ -44,6 +44,35 @@ fn given_multiple_md_files_when_opening_first_then_alphabetical_winner_returned(
 }
 
 #[test]
+fn given_multiple_md_files_when_list_md_files_then_alphabetical_md_only() {
+    let dir = tempdir().unwrap();
+    fs::write(dir.path().join("zzz.md"), "# z\n").unwrap();
+    fs::write(dir.path().join("aaa.md"), "# a\n").unwrap();
+    fs::write(dir.path().join("mmm.md"), "# m\n").unwrap();
+    // A non-.md file must be excluded from the listing.
+    fs::write(dir.path().join("notes.txt"), "not markdown").unwrap();
+    // A subdirectory (even one holding a .md) must not be walked.
+    fs::create_dir(dir.path().join("sub")).unwrap();
+    fs::write(dir.path().join("sub").join("nested.md"), "# nested\n").unwrap();
+
+    let entries = Vault::new(dir.path()).list_md_files().unwrap();
+
+    let names: Vec<&str> = entries.iter().map(|e| e.name.as_str()).collect();
+    assert_eq!(names, ["aaa.md", "mmm.md", "zzz.md"]);
+    // Paths point at the real files directly under the root.
+    assert_eq!(entries[0].path, dir.path().join("aaa.md"));
+}
+
+#[test]
+fn given_an_empty_directory_when_list_md_files_then_empty_vec() {
+    let dir = tempdir().unwrap();
+
+    let entries = Vault::new(dir.path()).list_md_files().unwrap();
+
+    assert!(entries.is_empty());
+}
+
+#[test]
 fn given_an_empty_directory_when_opening_then_no_markdown_file_error() {
     let dir = tempdir().unwrap();
 

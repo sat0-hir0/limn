@@ -23,5 +23,10 @@ actions!(limn, [TogglePalette]);
 /// `"Editor"`-context root keeps the editor on the focus chain so the
 /// dispatch reaches it (see `crate::editor`).
 pub fn bind_keys(cx: &mut App) {
-    cx.bind_keys([KeyBinding::new("cmd-shift-p", TogglePalette, None)]);
+    // gpui's "secondary" modifier resolves to Cmd on macOS and Ctrl on
+    // Windows/Linux. A plain "cmd-" binding would collapse to the platform
+    // modifier (Win+Shift+P on Windows, which the shell reserves and never
+    // delivers to the app), so use "secondary" for correct cross-platform
+    // dispatch from a single binding.
+    cx.bind_keys([KeyBinding::new("secondary-shift-p", TogglePalette, None)]);
 }

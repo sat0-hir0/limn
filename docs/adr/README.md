@@ -59,4 +59,6 @@ This project uses the [MADR](https://adr.github.io/madr/) format.
 | [ADR-0005](0005-adopt-gpui-component-input-and-autosave-raw-text.md) | Adopt gpui-component `InputState` for editing and autosave raw text | Proposed | 2026-06-28 |
 | [ADR-0008](0008-command-palette-and-view-switching-via-gpui-actions.md) | Command palette and view-switching via gpui actions | Proposed | 2026-06-29 |
 
+> ADR-0006 and ADR-0007 are intentionally not listed: the numbers are reserved for in-flight decisions on other branches and are skipped here until those ADRs land.
+
 > This index is maintained by hand. We may switch to auto-generation via a tool such as `adr-log` in the future.

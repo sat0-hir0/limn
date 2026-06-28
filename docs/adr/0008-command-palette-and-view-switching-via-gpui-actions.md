@@ -84,6 +84,14 @@ four constraints:
    dispatch tree — which is what makes action dispatch reach the handler
    deterministically.
 
+5. **Cross-platform modifiers use gpui's `secondary`.** Keybindings that
+   should mean "Cmd on macOS, Ctrl elsewhere" use gpui's `secondary`
+   keystroke modifier, which resolves to Cmd on macOS and Ctrl on
+   Windows/Linux from a single binding. A plain `cmd-` binding would
+   collapse to the platform modifier (Win+… on Windows, which the shell
+   reserves and never delivers to the app); gpui has no OS-level cmd→ctrl
+   normalization for `cmd` itself, so `secondary` is the correct primitive.
+
 We choose this because it keeps the keymap auditable in one place,
 decouples the stable intent vocabulary from churning implementations,
 and makes action dispatch correct by construction rather than dependent

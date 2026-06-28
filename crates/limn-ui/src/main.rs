@@ -109,6 +109,8 @@ fn run_editable(flags: FeatureFlags) {
         // Required before using any gpui-component feature.
         gpui_component::init(cx);
         cx.set_global(flags);
+        // Register the editable shell's global keybindings (Wave 4).
+        limn_ui::actions::bind_keys(cx);
 
         let bounds = Bounds::centered(None, size(px(900.0), px(700.0)), cx);
         let window_options = WindowOptions {

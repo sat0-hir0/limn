@@ -19,10 +19,13 @@ use std::path::PathBuf;
 use std::time::Duration;
 
 use gpui::{
-    div, px, rgb, AppContext as _, Context, Entity, IntoElement, ParentElement, Render,
-    SharedString, Styled, Subscription, Task, Window,
+    div, px, rgb, App, AppContext as _, Context, Entity, FocusHandle, Focusable,
+    InteractiveElement, IntoElement, ParentElement, Render, SharedString, Styled, Subscription,
+    Task, Window,
 };
 use gpui_component::input::{Input, InputEvent, InputState};
+
+use crate::actions::TogglePalette;
 
 use limn_service::Vault;
 
@@ -52,6 +55,12 @@ pub struct EditorView {
     /// cancels) any in-flight timer, which is what makes the debounce
     /// work: only the most recent change survives the quiet window.
     pending_save: Task<()>,
+    /// The view's own focus handle. The render root is `track_focus`d on
+    /// it so the `EditorView` is always present on the window's dispatch
+    /// (focus) tree. That placement is what lets a globally-dispatched
+    /// action (e.g. [`TogglePalette`]) reach this view's `on_action`
+    /// handler — see `focus` and `render` for the focus reasoning.
+    focus_handle: FocusHandle,
 }
 
 impl EditorView {
@@ -96,12 +105,54 @@ impl EditorView {
             // No edit yet, so nothing pending. A no-op task is the
             // simplest "empty" value for the slot.
             pending_save: Task::ready(()),
+            focus_handle: cx.focus_handle(),
         }
     }
 
     /// Focus the editor so keystrokes land in the buffer.
+    ///
+    /// We focus the `InputState`, not `self.focus_handle`, on purpose.
+    /// Text input must reach the component's `EntityInputHandler` (cursor,
+    /// selection, IME), which only happens when the `InputState` itself
+    /// holds focus. `self.focus_handle` is *not* focused here; instead the
+    /// render root is `track_focus`d on it (see `render`), so the
+    /// `EditorView` is an ancestor of the focused `InputState` on the
+    /// dispatch tree. That ancestry is enough for a globally-dispatched
+    /// action to bubble to this view's `on_action` handler.
+    ///
+    /// This is the deliberate resolution of the focus double-management
+    /// concern the architect flagged: rather than juggling who "owns"
+    /// focus, we keep a single focused handle (the `InputState`) and rely
+    /// on the focus *chain* — the tracked `EditorView` root above it — to
+    /// receive actions. No real device was available to confirm dispatch
+    /// behaviour in this session, so we chose the option that keeps the
+    /// `EditorView` on the focus chain unconditionally rather than one
+    /// that depends on a `None`-context action finding a non-ancestor
+    /// handler.
     pub fn focus(&self, window: &mut Window, cx: &mut Context<Self>) {
         self.state.update(cx, |state, cx| state.focus(window, cx));
+    }
+
+    /// Handle the [`TogglePalette`] action.
+    ///
+    /// Wave 4 only proves the dispatch path reaches the editor; the
+    /// command palette overlay is Wave 5 work. For now we log so an
+    /// interactive run can confirm the keybinding fired end to end. The
+    /// action *type* is stable; Wave 5 replaces this body, not the
+    /// signature.
+    #[expect(
+        clippy::unused_self,
+        reason = "signature is fixed by gpui's on_action listener contract; \
+                  Wave 5 fills the body and will use self"
+    )]
+    fn on_toggle_palette(
+        &mut self,
+        _: &TogglePalette,
+        _window: &mut Window,
+        _cx: &mut Context<Self>,
+    ) {
+        // Wave 5: open the command palette overlay here.
+        eprintln!("limn-ui: palette toggle requested");
     }
 
     /// Current buffer text. Exposed so tests can assert that typed input
@@ -162,12 +213,27 @@ impl EditorView {
     }
 }
 
+impl Focusable for EditorView {
+    fn focus_handle(&self, _: &App) -> FocusHandle {
+        self.focus_handle.clone()
+    }
+}
+
 impl Render for EditorView {
-    fn render(&mut self, _window: &mut Window, _cx: &mut Context<Self>) -> impl IntoElement {
+    fn render(&mut self, _window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
         let bg = rgb(0x00fa_f9f6);
         let fg = rgb(0x001a_1a1a);
 
         div()
+            // Put the `EditorView` on the window's focus/dispatch tree so
+            // its `on_action` handler is reachable. `key_context("Editor")`
+            // names the context after the view (ADR-0008: context name =
+            // view name; the gpui-component `Root`'s own context is not
+            // used for limn actions). `on_action` binds the action type to
+            // this view's handler via `cx.listener`.
+            .track_focus(&self.focus_handle)
+            .key_context("Editor")
+            .on_action(cx.listener(Self::on_toggle_palette))
             .size_full()
             .bg(bg)
             .text_color(fg)

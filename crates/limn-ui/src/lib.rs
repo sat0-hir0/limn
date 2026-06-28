@@ -7,6 +7,7 @@ use gpui::{div, rgb, Context, IntoElement, ParentElement, Render, SharedString, 
 
 use limn_core::block::{Block, BlockKind};
 
+pub mod actions;
 pub mod editor;
 pub mod feature_flags;
 

@@ -10,9 +10,11 @@ use limn_core::block::{Block, BlockKind};
 pub mod actions;
 pub mod editor;
 pub mod feature_flags;
+pub mod palette;
 
 pub use editor::EditorView;
 pub use feature_flags::FeatureFlags;
+pub use palette::PaletteView;
 
 /// Read-only view of a parsed Markdown document. M1's only view; M2
 /// will introduce an editing-capable variant.

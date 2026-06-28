@@ -24,8 +24,10 @@ use gpui::{
     Task, Window,
 };
 use gpui_component::input::{Input, InputEvent, InputState};
+use gpui_component::{Root, WindowExt as _};
 
 use crate::actions::TogglePalette;
+use crate::{FeatureFlags, PaletteView};
 
 use limn_service::Vault;
 
@@ -133,26 +135,48 @@ impl EditorView {
         self.state.update(cx, |state, cx| state.focus(window, cx));
     }
 
-    /// Handle the [`TogglePalette`] action.
+    /// Handle the [`TogglePalette`] action: open the command palette
+    /// modal, or close it if one is already open.
     ///
-    /// Wave 4 only proves the dispatch path reaches the editor; the
-    /// command palette overlay is Wave 5 work. For now we log so an
-    /// interactive run can confirm the keybinding fired end to end. The
-    /// action *type* is stable; Wave 5 replaces this body, not the
-    /// signature.
+    /// Gated on `LIMN_FEAT_PALETTE`: when the flag is off the action is a
+    /// no-op (the keybinding is still registered, but the editable shell
+    /// otherwise behaves as before). The flag is layered on
+    /// `LIMN_FEAT_EDIT` — this handler only exists on the editable path,
+    /// which is the only one that builds a `gpui-component` `Root`, and a
+    /// `Root` is required for the Dialog overlay the palette renders into.
+    ///
+    /// A fresh [`PaletteView`] is created on every open so no selection or
+    /// query state survives across opens; the `EditorView` deliberately
+    /// holds no palette field.
     #[expect(
         clippy::unused_self,
         reason = "signature is fixed by gpui's on_action listener contract; \
-                  Wave 5 fills the body and will use self"
+                  the handler reads globals and the window, not self"
     )]
     fn on_toggle_palette(
         &mut self,
         _: &TogglePalette,
-        _window: &mut Window,
-        _cx: &mut Context<Self>,
+        window: &mut Window,
+        cx: &mut Context<Self>,
     ) {
-        // Wave 5: open the command palette overlay here.
-        eprintln!("limn-ui: palette toggle requested");
+        if !cx.global::<FeatureFlags>().palette {
+            return;
+        }
+
+        if window.has_active_dialog(cx) {
+            window.close_dialog(cx);
+            return;
+        }
+
+        let palette = cx.new(|cx| PaletteView::new(window, cx));
+        window.open_dialog(cx, move |dialog, _, _| {
+            // No title / footer / close button: the palette is a bare
+            // command list. `keyboard(true)` (the default) keeps the
+            // Dialog's Esc-to-close. The list's own Esc/Enter live in the
+            // `"List"` context; see ADR-0008 for why these are
+            // independent of limn's action contexts.
+            dialog.title("Command Palette").child(palette.clone())
+        });
     }
 
     /// Current buffer text. Exposed so tests can assert that typed input
@@ -220,7 +244,7 @@ impl Focusable for EditorView {
 }
 
 impl Render for EditorView {
-    fn render(&mut self, _window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
+    fn render(&mut self, window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
         let bg = rgb(0x00fa_f9f6);
         let fg = rgb(0x001a_1a1a);
 
@@ -255,5 +279,12 @@ impl Render for EditorView {
                     .min_h(px(0.0))
                     .child(Input::new(&self.state).h_full()),
             )
+            // Render the gpui-component Dialog overlay layer. The
+            // component's `Root` does NOT draw active dialogs itself
+            // (`Root::render` omits the dialog layer), so without this the
+            // palette's `open_dialog` would mutate state but paint
+            // nothing. `render_dialog_layer` returns `None` when no dialog
+            // is open, so this is inert until the palette is toggled.
+            .children(Root::render_dialog_layer(window, cx))
     }
 }

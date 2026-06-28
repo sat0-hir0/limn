@@ -133,6 +133,12 @@ on unverified focus behaviour.
   handler; the palette overlay and view-switching are deferred.
 - No public CLI/argv change; the feature stays behind `LIMN_FEAT_EDIT`
   (ADR-0005).
+- Wave 5's palette uses gpui-component's Dialog overlay machinery
+  (`Root::render_dialog_layer`, the `"Dialog"` key context). This is
+  independent of constraint 3 (not binding limn actions to the `"Root"`
+  context): the Dialog's Esc/Enter are handled by the component's
+  `"Dialog"` and `"List"` contexts, not by any limn-owned context, so the
+  command layer stays decoupled from the component's `Root` context.
 
 ---
 

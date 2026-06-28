@@ -10,10 +10,12 @@ use gpui::{div, rgb, Context, IntoElement, ParentElement, Render, SharedString, 
 use limn_core::block::{Block, BlockKind};
 
 pub mod actions;
+pub mod config_global;
 pub mod editor;
 pub mod feature_flags;
 pub mod palette;
 
+pub use config_global::AppConfig;
 pub use editor::EditorView;
 pub use feature_flags::FeatureFlags;
 pub use palette::PaletteView;

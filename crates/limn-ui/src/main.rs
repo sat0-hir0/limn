@@ -19,8 +19,8 @@ use gpui_component_assets::Assets;
 use gpui_platform::application;
 
 use limn_core::markdown;
-use limn_service::{Document, RawDocument, Vault};
-use limn_ui::{file_title, DocumentView, EditorView, FeatureFlags};
+use limn_service::{Document, LimnConfig, RawDocument, Vault};
+use limn_ui::{file_title, AppConfig, DocumentView, EditorView, FeatureFlags};
 
 const WELCOME_MD: &str = include_str!("welcome.md");
 const WELCOME_TITLE: &str = "Welcome";
@@ -28,16 +28,26 @@ const WELCOME_TITLE: &str = "Welcome";
 fn main() {
     let flags = FeatureFlags::from_env();
 
+    // Load the user config once at startup. `load` never fails — it falls
+    // back to defaults and logs the reason (ADR-0007). Wave 7 applies
+    // `vault_path` (below) and carries `font` / `theme` in the global;
+    // applying those to rendering is Wave 8.
+    let config = LimnConfig::load();
+    eprintln!(
+        "limn-ui: config loaded (theme={:?}, vault_path={:?})",
+        config.theme, config.vault_path
+    );
+
     if flags.edit {
-        run_editable(flags);
+        run_editable(flags, config);
     } else {
-        run_read_only(flags);
+        run_read_only(flags, config);
     }
 }
 
 /// Read-only path (M1 behaviour): parse the document into blocks and
 /// render them with [`DocumentView`].
-fn run_read_only(flags: FeatureFlags) {
+fn run_read_only(flags: FeatureFlags, config: LimnConfig) {
     let document = match std::env::args().nth(1) {
         Some(arg) => load_document(&PathBuf::from(arg)),
         None => Ok(welcome_document()),
@@ -55,6 +65,7 @@ fn run_read_only(flags: FeatureFlags) {
 
     application().run(move |cx: &mut App| {
         cx.set_global(flags.clone());
+        cx.set_global(AppConfig(config.clone()));
         let bounds = Bounds::centered(None, size(px(900.0), px(700.0)), cx);
         cx.open_window(
             WindowOptions {
@@ -76,11 +87,18 @@ fn run_read_only(flags: FeatureFlags) {
 /// Editable path (`LIMN_FEAT_EDIT=1`): seed an [`EditorView`] with the
 /// file's raw text. `gpui-component` needs its bundled [`Assets`], a
 /// `gpui_component::init`, and a [`Root`] as the window's first view.
-fn run_editable(flags: FeatureFlags) {
-    // No argv = the embedded Welcome document, which is ephemeral and has
-    // no backing file. A path argument means a real file on disk. Only
-    // the latter has a save target; the former autosaves to `None` so
-    // edits to Welcome never write a stray file to the working directory.
+fn run_editable(flags: FeatureFlags, config: LimnConfig) {
+    // Resolution order for what to open (Wave 7 wires in `vault_path`):
+    //
+    // 1. A CLI path argument always wins (preserves existing behaviour).
+    // 2. Otherwise, if the config has a `vault_path`, open the first `.md`
+    //    in that vault — this is Wave 7's user-facing value: launching
+    //    with no argument lands you in your configured vault.
+    // 3. Otherwise fall back to the embedded Welcome document.
+    //
+    // A real file on disk (cases 1 and 2) has a save target; Welcome is
+    // ephemeral and autosaves to `None`, so edits to it never write a
+    // stray file to the working directory.
     let (raw, save_path) = match std::env::args().nth(1) {
         Some(arg) => match load_raw_document(&PathBuf::from(arg)) {
             // Save back to the resolved path (a directory input resolves
@@ -91,7 +109,25 @@ fn run_editable(flags: FeatureFlags) {
             }
             Err(e) => (Err(e), None),
         },
-        None => (Ok(welcome_raw_document()), None),
+        None => match config.vault_path.as_deref() {
+            Some(vault_root) => match load_raw_document(vault_root) {
+                Ok(d) => {
+                    let resolved = d.path.clone();
+                    (Ok(d), Some(resolved))
+                }
+                // An unreadable / empty configured vault is not fatal:
+                // log and fall back to Welcome rather than refusing to
+                // start (mirrors the load-never-blocks-startup stance).
+                Err(e) => {
+                    eprintln!(
+                        "limn-ui: configured vault_path {} unusable: {e}; showing Welcome",
+                        vault_root.display()
+                    );
+                    (Ok(welcome_raw_document()), None)
+                }
+            },
+            None => (Ok(welcome_raw_document()), None),
+        },
     };
     let raw = match raw {
         Ok(d) => d,
@@ -109,6 +145,7 @@ fn run_editable(flags: FeatureFlags) {
         // Required before using any gpui-component feature.
         gpui_component::init(cx);
         cx.set_global(flags);
+        cx.set_global(AppConfig(config));
         // Register the editable shell's global keybindings (Wave 4).
         limn_ui::actions::bind_keys(cx);
 

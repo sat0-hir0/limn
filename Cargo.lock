@@ -3602,8 +3602,11 @@ dependencies = [
 name = "limn-service"
 version = "0.0.0"
 dependencies = [
+ "dirs",
  "limn-core",
+ "serde",
  "tempfile",
+ "toml 0.8.23",
 ]
 
 [[package]]

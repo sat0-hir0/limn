@@ -57,9 +57,10 @@ This project uses the [MADR](https://adr.github.io/madr/) format.
 | [ADR-0003](0003-temporarily-accept-gpl-contamination.md) | Temporarily Accept GPL Contamination | Accepted | 2026-06-21 |
 | [ADR-0004](0004-scope-skillshare-to-oss-operations.md) | Scope `.skillshare/` skills to OSS operating procedures | Accepted | 2026-06-23 |
 | [ADR-0005](0005-adopt-gpui-component-input-and-autosave-raw-text.md) | Adopt gpui-component `InputState` for editing and autosave raw text | Proposed | 2026-06-28 |
+| [ADR-0007](0007-user-configuration-via-toml-file.md) | User configuration via a TOML file at `~/.config/limn/config.toml` | Proposed | 2026-06-29 |
 | [ADR-0008](0008-command-palette-and-view-switching-via-gpui-actions.md) | Command palette and view-switching via gpui actions | Proposed | 2026-06-29 |
 | [ADR-0009](0009-fuzzy-open-file-and-buffer-swap.md) | Fuzzy open-file in the palette via vault listing and InputState buffer swap | Proposed | 2026-06-29 |
 
-> ADR-0006 and ADR-0007 are intentionally not listed: the numbers are reserved for in-flight decisions on other branches and are skipped here until those ADRs land.
+> ADR-0006 is intentionally not listed: the number is reserved for an in-flight decision on another branch and is skipped here until that ADR lands.
 
 > This index is maintained by hand. We may switch to auto-generation via a tool such as `adr-log` in the future.

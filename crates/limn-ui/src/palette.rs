@@ -207,6 +207,25 @@ impl PaletteView {
             focus_handle: cx.focus_handle(),
         }
     }
+
+    /// Focus the underlying `List` so arrow-key navigation and Enter
+    /// confirm work as soon as the palette opens.
+    ///
+    /// GPUI dispatches key events from the focused node upward to the
+    /// root, so the `List`'s `"List"` key context (which binds up / down /
+    /// enter) only sits on the dispatch path when the `List` itself is
+    /// focused. `open_dialog` focuses the *Dialog* node, and the `List` is
+    /// a descendant of it — not an ancestor — so without this explicit
+    /// focus the list's bindings never see the keys and keyboard selection
+    /// is dead (only mouse click and the Dialog's own Esc work).
+    ///
+    /// This mirrors `gpui-component`'s own `Combobox`, which calls
+    /// `self.state.list.focus_handle(cx).focus(window, cx)` every time it
+    /// opens its overlay (combobox.rs). `ListState::focus` is the public
+    /// API for the same effect (list/list.rs).
+    pub fn focus_list(&self, window: &mut Window, cx: &mut App) {
+        self.state.update(cx, |state, cx| state.focus(window, cx));
+    }
 }
 
 impl Focusable for PaletteView {

@@ -136,9 +136,26 @@ on unverified focus behaviour.
 - Wave 5's palette uses gpui-component's Dialog overlay machinery
   (`Root::render_dialog_layer`, the `"Dialog"` key context). This is
   independent of constraint 3 (not binding limn actions to the `"Root"`
-  context): the Dialog's Esc/Enter are handled by the component's
-  `"Dialog"` and `"List"` contexts, not by any limn-owned context, so the
-  command layer stays decoupled from the component's `Root` context.
+  context): the Dialog's Esc and the List's up / down / enter are handled
+  by the component's `"Dialog"` and `"List"` contexts, not by any
+  limn-owned context, so the command layer stays decoupled from the
+  component's `Root` context.
+- The "correct by construction, does not hinge on focus" property above
+  applies to the **Wave 4 action-dispatch foundation only** (the
+  `EditorView` handler sitting on the focus chain). It does **not** carry
+  over to the Wave 5 palette's `List`. `open_dialog` focuses the Dialog
+  node, and the `List` is a *descendant* of that node, not an ancestor.
+  Because gpui dispatches keys from the focused node upward to the root,
+  the `List`'s `"List"` context is only on the dispatch path when the
+  `List` itself holds focus. The palette therefore **must explicitly
+  focus its `List`** after opening — the standard pattern for a `List`
+  inside a Dialog overlay, mirroring gpui-component's own `Combobox`,
+  which focuses its list every time it opens (`combobox.rs`;
+  `ListState::focus` in `list/list.rs` is the public entry point). Mouse
+  click and the Dialog's Esc work without this; keyboard selection
+  (up / down / enter) does not. This is implemented in `editor.rs`
+  (`on_toggle_palette` calls `PaletteView::focus_list` after
+  `open_dialog`).
 
 ---
 

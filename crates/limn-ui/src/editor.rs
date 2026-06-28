@@ -169,14 +169,25 @@ impl EditorView {
         }
 
         let palette = cx.new(|cx| PaletteView::new(window, cx));
-        window.open_dialog(cx, move |dialog, _, _| {
-            // No title / footer / close button: the palette is a bare
-            // command list. `keyboard(true)` (the default) keeps the
-            // Dialog's Esc-to-close. The list's own Esc/Enter live in the
-            // `"List"` context; see ADR-0008 for why these are
-            // independent of limn's action contexts.
-            dialog.title("Command Palette").child(palette.clone())
+        window.open_dialog(cx, {
+            let palette = palette.clone();
+            move |dialog, _, _| {
+                // No title / footer / close button: the palette is a bare
+                // command list. `keyboard(true)` (the default) keeps the
+                // Dialog's Esc-to-close. The list's own Esc/Enter live in
+                // the `"List"` context; see ADR-0008 for why these are
+                // independent of limn's action contexts.
+                dialog.title("Command Palette").child(palette.clone())
+            }
         });
+
+        // `open_dialog` focuses the Dialog node, not the List inside it.
+        // GPUI dispatches keys from the focused node upward, so the List's
+        // `"List"` context (up / down / enter) is only on the dispatch
+        // path when the List itself is focused. Without this the palette
+        // opens but keyboard selection is dead. Mirrors `gpui-component`'s
+        // `Combobox`, which focuses its list every time the overlay opens.
+        palette.update(cx, |palette, cx| palette.focus_list(window, cx));
     }
 
     /// Current buffer text. Exposed so tests can assert that typed input

@@ -131,9 +131,14 @@ provides. Intent of each step:
 | `ColorPalette::amber_500()` | Caution |
 | `ColorPalette::red_500()` | Critical |
 
-Each has a tint variant (`green_tint`, `amber_tint`, `red_tint`) for the
-background of an informational chip. Saturation is intentionally low — a
-caution chip should sit next to body text without fighting it.
+The corresponding tint variants live on `ColorPalette` as `green_tint()` /
+`amber_tint()` / `red_tint()` for the background of an informational chip.
+They are intentionally **not** promoted to `ColorTheme` semantic fields in
+Wave 10; render sites that need a status-chip background should call the
+palette directly for now. If a stable chip pattern emerges, a future ADR
+can add `positive_tint` / `caution_tint` / `critical_tint` semantic fields
+to `ColorTheme`. Saturation is intentionally low — a caution chip should
+sit next to body text without fighting it.
 
 ### Two built-in themes
 
@@ -244,6 +249,41 @@ render code.
 
 Ink-theme equivalents follow the same intent at higher alpha and lower
 neutral steps — see `ColorTheme::ink()`.
+
+### Editor canvas mapping for Wave 10-C
+
+Wave 10-B left four hardcoded `rgb(0x...)` literals on the editor canvas
+and the read-only document view. Wave 10-C will replace them with the
+following semantic roles ( accessed via the active `ColorTheme`; the
+exact access path — `cx.global::<ColorTheme>()` vs a per-frame resolve —
+is a Wave 10-D decision ):
+
+| Existing hardcoded | Replace with | Reason |
+|---|---|---|
+| `editor.rs:295` `rgb(0x00fa_f9f6)` ( bg ) | `ColorTheme::surface_app` | Editor canvas = `surface_app` ( paper or ink depending on the active theme ) |
+| `editor.rs:296` `rgb(0x001a_1a1a)` ( fg ) | `ColorTheme::editor_text` | Editor body text ( the role designed for the canvas ) |
+| `lib.rs:51` `rgb(0x00fa_f9f6)` ( bg ) | `ColorTheme::surface_app` | `DocumentView` ( read-only path ) shares the same canvas role |
+| `lib.rs:52` `rgb(0x001a_1a1a)` ( fg ) | `ColorTheme::text_body` | `DocumentView` body text ( not `editor_text` — `DocumentView` renders read-only prose, not an editor ) |
+
+The line numbers are approximate and will shift in the Wave 10-C diff;
+the mapping by role is what matters.
+
+### Which theme API to call
+
+`gpui_component::Theme` and `limn_ui::ColorTheme` coexist (ADR-0011).
+Knowing which API to call avoids drift between Limn-rendered surfaces
+and gpui-component-rendered widgets:
+
+| Widget / surface | Theme API |
+|---|---|
+| `EditorView`, `DocumentView`, `AppShell` chrome ( Limn-owned views ) | `cx.global::<ColorTheme>()` ( Limn `ColorTheme` ) |
+| `Input`, `Button`, `Switch` inside `SettingsView` ( gpui-component ports ) | `cx.theme()` ( `gpui_component::Theme` ) |
+| `PaletteView` row chrome ( gpui-component `Popover` host ) | `cx.theme()` for the host frame, `ColorTheme` for Limn-rendered row content |
+| Status / informational chips ( background tint ) | `ColorPalette::{green,amber,red}_tint()` directly until a `ColorTheme` role lands |
+| New Limn-owned widget | `ColorTheme` ( add a role if none fits, rather than reaching for `ColorPalette` ) |
+
+If the two APIs report different values for a role that exists in both,
+that is a bug — see ADR-0011's "Negative" subsection on drift risk.
 
 ---
 

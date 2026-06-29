@@ -28,6 +28,18 @@ real, but only for surfaces that already read `cx.theme()` — the editor
 still rendered its hardcoded literals, so a user switching to dark mode
 saw gpui-component surfaces flip while the editing canvas stayed cream.
 
+The existing hardcoded literals are `rgb(0x00fa_f9f6)` ( a warm
+off-white, dating back to Wave 1 ) for background and `rgb(0x001a_1a1a)`
+( near-black ) for text. The design system's equivalents are
+`ColorPalette::n_50()` = `rgb(0x00f0_f3f4)` ( a cool-tinted paper ) and
+`ColorTheme::paper().text_body` = `ColorPalette::n_700()` =
+`rgb(0x0034_3a40)`. Adopting the palette is therefore a deliberate
+visual change in Wave 10-C, not a behaviour-preserving refactor — the
+editor's paper surface acquires the cool tint that the visual language
+calls for, and body text moves from near-black to a slightly softer
+ink. The change is intentional; this ADR records it so that Wave 10-C's
+diff does not look like a regression in review.
+
 A design system was then produced externally (the claude.ai/design
 project) covering:
 
@@ -75,10 +87,19 @@ Concretely:
      persisted choice ( `Light` → `paper`, `Dark` → `ink` ).
 
 3. **New render code in `crates/limn-ui/` MUST source colors from
-   `ColorTheme` rather than from hardcoded `rgb(0x...)` literals.** The
-   existing hardcoded literals in `editor.rs` and `lib.rs` are scheduled
-   to be replaced in Wave 10-C. Any new literal that lands in a render
-   path after this ADR is a code-review red flag.
+   `ColorTheme` rather than from hardcoded `rgb(0x...)` literals.**
+   Wave 10-C will replace the four existing hardcoded sites:
+
+   - `editor.rs:295` ( `EditorView` bg ) → `ColorTheme::surface_app`
+   - `editor.rs:296` ( `EditorView` fg ) → `ColorTheme::editor_text`
+   - `lib.rs:51` ( `DocumentView` bg ) → `ColorTheme::surface_app`
+   - `lib.rs:52` ( `DocumentView` fg ) → `ColorTheme::text_body`
+
+   The line numbers are approximate ( they will shift in the Wave 10-C
+   diff ); the mapping by role is what's decided. `DocumentView` maps
+   to `text_body` rather than `editor_text` because it renders read-only
+   prose, not an editor. Any new `rgb(0x...)` literal that lands in a
+   render path after this ADR is a code-review red flag.
 
 4. **`gpui_component::Theme` continues to exist** for components imported
    from gpui-component (`SettingsView`'s Input / Switch / Button etc.).
@@ -130,6 +151,25 @@ or a bespoke wrapper around every render call.
   `editor.rs` and `lib.rs` still render the old hardcoded literals
   while `SettingsView` and `PaletteView` already render against a
   theme. The inconsistency is a known follow-up, not an unknown.
+- **Drift risk between `limn_ui::ColorTheme` and
+  `gpui_component::Theme`.** If either system's semantic values change
+  ( our palette adjustment, or an upstream gpui-component theme
+  change ) without the other being updated, components rendered by
+  gpui-component ( e.g. `SettingsView`'s `Input`, `Button`, `Switch` )
+  will visually diverge from Limn-rendered surfaces ( `EditorView`,
+  `DocumentView`, `AppShell` chrome ). Neither system catches this
+  automatically. Wave 10-D's implementation MUST include an assertion
+  or snapshot test that confirms the values written into
+  `gpui_component::Theme` match the corresponding `ColorTheme` fields,
+  so the doubled write is at least self-checking.
+- **Cognitive load for new contributors.** "Which API do I use to get
+  the background color?" now has two answers depending on what's being
+  rendered: components ported from gpui-component use `cx.theme()`;
+  Limn-owned views use `cx.global::<ColorTheme>()` ( the global lands
+  in Wave 10-D ). `docs/design/visual-language.md` documents this
+  split ( see the "Which theme API to call" table in the Editor
+  specifics section ), but it is one more rule to learn. Mitigation:
+  the table is the single place a new contributor needs to read.
 
 ### Neutral
 

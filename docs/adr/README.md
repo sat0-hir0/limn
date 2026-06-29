@@ -62,6 +62,7 @@ This project uses the [MADR](https://adr.github.io/madr/) format.
 | [ADR-0008](0008-command-palette-and-view-switching-via-gpui-actions.md) | Command palette and view-switching via gpui actions | Proposed | 2026-06-29 |
 | [ADR-0009](0009-fuzzy-open-file-and-buffer-swap.md) | Fuzzy open-file in the palette via vault listing and InputState buffer swap | Proposed | 2026-06-29 |
 | [ADR-0010](0010-settings-view-and-view-switching.md) | Settings view as a separate screen and 3-route command convergence | Proposed | 2026-06-29 |
+| [ADR-0011](0011-adopt-limn-visual-language-as-color-source-of-truth.md) | Adopt Limn visual language ( paper & ink ) as the source of truth for color | Proposed | 2026-06-30 |
 
 > ADR-0006 is a non-decision placeholder kept only so the file sequence remains contiguous. See the record itself for the full explanation.
 

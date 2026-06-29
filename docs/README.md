@@ -13,6 +13,7 @@ Read this before diving into the code to understand where everything lives.
 | `docs/adr/` | Architecture Decision Records. Design decisions and their rationale recorded as ADRs. |
 | `docs/design/basic-features.md` | Inventory of basic editor features that must be present at a minimum (with priorities). |
 | `docs/design/testing-strategy.md` | Testing approach. Hybrid of the testing trophy and Functional Core unit tests. |
+| `docs/design/visual-language.md` | Visual language ( paper & ink, line blue, hairlines ). Maps to `crates/limn-ui/src/theme.rs`. |
 
 To understand the "why" behind a design decision, read `/ARCHITECTURE.md` first, then `docs/adr/`.
 
@@ -60,3 +61,4 @@ See [`docs/adr/README.md`](adr/README.md) for details.
 | ADR-0008 | Command palette and view-switching via gpui actions | Proposed |
 | ADR-0009 | Fuzzy open-file in the palette via vault listing and InputState buffer swap | Proposed |
 | ADR-0010 | Settings view as a separate screen and 3-route command convergence | Proposed |
+| ADR-0011 | Adopt Limn visual language ( paper & ink ) as the source of truth for color | Proposed |

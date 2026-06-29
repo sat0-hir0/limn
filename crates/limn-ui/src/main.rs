@@ -20,7 +20,10 @@ use gpui_platform::application;
 
 use limn_core::markdown;
 use limn_service::{Document, LimnConfig, RawDocument, Theme as LimnTheme, Vault};
-use limn_ui::{file_title, AppConfig, AppShell, DocumentView, EditorView, FeatureFlags};
+use limn_ui::{
+    file_title, AppConfig, AppShell, ColorTheme, ColorThemeGlobal, DocumentView, EditorView,
+    FeatureFlags,
+};
 
 const WELCOME_MD: &str = include_str!("welcome.md");
 const WELCOME_TITLE: &str = "Welcome";
@@ -66,6 +69,7 @@ fn run_read_only(flags: FeatureFlags, config: LimnConfig) {
     application().run(move |cx: &mut App| {
         cx.set_global(flags.clone());
         cx.set_global(AppConfig(config.clone()));
+        cx.set_global(ColorThemeGlobal(ColorTheme::from_config(config.theme)));
         let bounds = Bounds::centered(None, size(px(900.0), px(700.0)), cx);
         cx.open_window(
             WindowOptions {
@@ -146,6 +150,7 @@ fn run_editable(flags: FeatureFlags, config: LimnConfig) {
         gpui_component::init(cx);
         cx.set_global(flags);
         cx.set_global(AppConfig(config.clone()));
+        cx.set_global(ColorThemeGlobal(ColorTheme::from_config(config.theme)));
         // Wave 9: pipe the loaded theme into gpui-component's Theme global.
         // `window` is not available here (run closure runs before open_window
         // resolves), so pass None and call refresh_windows() — same pattern the

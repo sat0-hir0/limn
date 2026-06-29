@@ -5,7 +5,7 @@
 
 use std::path::Path;
 
-use gpui::{div, rgb, Context, IntoElement, ParentElement, Render, SharedString, Styled, Window};
+use gpui::{div, Context, IntoElement, ParentElement, Render, SharedString, Styled, Window};
 
 use limn_core::block::{Block, BlockKind};
 
@@ -24,7 +24,7 @@ pub use feature_flags::FeatureFlags;
 pub use palette::PaletteView;
 pub use settings::SettingsView;
 pub use shell::{AppShell, ScreenKind};
-pub use theme::{ColorPalette, ColorTheme};
+pub use theme::{ColorPalette, ColorTheme, ColorThemeGlobal};
 
 /// File name for the header strip, or `(unnamed)` when there is none.
 ///
@@ -47,14 +47,13 @@ pub struct DocumentView {
 }
 
 impl Render for DocumentView {
-    fn render(&mut self, _window: &mut Window, _cx: &mut Context<Self>) -> impl IntoElement {
-        let bg = rgb(0x00fa_f9f6);
-        let fg = rgb(0x001a_1a1a);
+    fn render(&mut self, _window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
+        let theme = cx.global::<ColorThemeGlobal>().0;
 
         div()
             .size_full()
-            .bg(bg)
-            .text_color(fg)
+            .bg(theme.surface_app)
+            .text_color(theme.text_body)
             .p_8()
             .flex()
             .flex_col()

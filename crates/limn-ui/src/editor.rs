@@ -19,13 +19,13 @@ use std::path::PathBuf;
 use std::time::Duration;
 
 use gpui::{
-    div, px, rgb, App, AppContext as _, Context, Entity, FocusHandle, Focusable,
-    InteractiveElement, IntoElement, ParentElement, Render, SharedString, Styled, Subscription,
-    Task, Window,
+    div, px, App, AppContext as _, Context, Entity, FocusHandle, Focusable, InteractiveElement,
+    IntoElement, ParentElement, Render, SharedString, Styled, Subscription, Task, Window,
 };
 use gpui_component::input::{Input, InputEvent, InputState};
 
 use crate::file_title;
+use crate::ColorThemeGlobal;
 
 use limn_service::{RawDocument, Vault};
 
@@ -291,9 +291,8 @@ impl Focusable for EditorView {
 }
 
 impl Render for EditorView {
-    fn render(&mut self, _window: &mut Window, _cx: &mut Context<Self>) -> impl IntoElement {
-        let bg = rgb(0x00fa_f9f6);
-        let fg = rgb(0x001a_1a1a);
+    fn render(&mut self, _window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
+        let theme = cx.global::<ColorThemeGlobal>().0;
 
         div()
             // Put the `EditorView` on the window's focus/dispatch tree so
@@ -306,8 +305,8 @@ impl Render for EditorView {
             .track_focus(&self.focus_handle)
             .key_context("Editor")
             .size_full()
-            .bg(bg)
-            .text_color(fg)
+            .bg(theme.surface_app)
+            .text_color(theme.editor_text)
             .p_8()
             .flex()
             .flex_col()

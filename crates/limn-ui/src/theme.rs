@@ -11,7 +11,7 @@
 //! colors to semantic roles (surface, text, accent, editor, status).
 //! Design source of truth: Limn design system (see `docs/design/`).
 
-use gpui::{rgb, rgba, Rgba};
+use gpui::{rgb, rgba, Global, Rgba};
 
 /// Raw palette — the cool-tinted neutral ramp, the single accent,
 /// approved accent alternates, and muted status hues. Theme-independent.
@@ -321,6 +321,21 @@ impl Default for ColorTheme {
     }
 }
 
+/// gpui global wrapper for the active [`ColorTheme`].
+///
+/// Registered at startup via `cx.set_global(ColorThemeGlobal(theme))`.
+/// Render sites in `limn-ui` read the active theme with
+/// `cx.global::<ColorThemeGlobal>().0`.
+///
+/// Wave 10-D: settings save mutates this global via
+/// `cx.set_global(ColorThemeGlobal(ColorTheme::from_config(new_theme)))`
+/// immediately after updating `AppConfig`, so the next frame picks up
+/// the new colors.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct ColorThemeGlobal(pub ColorTheme);
+
+impl Global for ColorThemeGlobal {}
+
 #[cfg(test)]
 mod tests {
     // Direct f32 field comparisons below are exact: both sides come from
@@ -436,5 +451,23 @@ mod tests {
             ColorTheme::from_config(limn_service::Theme::Dark),
             ColorTheme::ink()
         );
+    }
+
+    #[test]
+    fn color_theme_global_wraps_theme_correctly() {
+        let g = ColorThemeGlobal(ColorTheme::paper());
+        assert_eq!(g.0, ColorTheme::paper());
+    }
+
+    #[test]
+    fn color_theme_global_paper_surface_app_matches_theme() {
+        let g = ColorThemeGlobal(ColorTheme::from_config(limn_service::Theme::Light));
+        assert_eq!(g.0.surface_app, ColorTheme::paper().surface_app);
+    }
+
+    #[test]
+    fn color_theme_global_ink_editor_text_matches_theme() {
+        let g = ColorThemeGlobal(ColorTheme::from_config(limn_service::Theme::Dark));
+        assert_eq!(g.0.editor_text, ColorTheme::ink().editor_text);
     }
 }

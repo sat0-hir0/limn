@@ -276,7 +276,7 @@ and gpui-component-rendered widgets:
 
 | Widget / surface | Theme API |
 |---|---|
-| `EditorView`, `DocumentView`, `AppShell` chrome ( Limn-owned views ) | `cx.global::<ColorTheme>()` ( Limn `ColorTheme` ) |
+| `EditorView`, `DocumentView`, `AppShell` chrome ( Limn-owned views ) | `cx.global::<ColorThemeGlobal>().0` ( Limn `ColorTheme` ) |
 | `Input`, `Button`, `Switch` inside `SettingsView` ( gpui-component ports ) | `cx.theme()` ( `gpui_component::Theme` ) |
 | `PaletteView` row chrome ( gpui-component `Popover` host ) | `cx.theme()` for the host frame, `ColorTheme` for Limn-rendered row content |
 | Status / informational chips ( background tint ) | `ColorPalette::{green,amber,red}_tint()` directly until a `ColorTheme` role lands |

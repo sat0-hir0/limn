@@ -18,7 +18,8 @@ use limn_core::block::Block;
 use limn_service::LimnConfig;
 use limn_ui::actions::{CloseSettings, OpenSettings, TogglePalette};
 use limn_ui::{
-    AppConfig, AppShell, DocumentView, EditorView, FeatureFlags, ScreenKind, SettingsView,
+    AppConfig, AppShell, ColorTheme, ColorThemeGlobal, DocumentView, EditorView, FeatureFlags,
+    ScreenKind, SettingsView,
 };
 
 #[gpui::test]
@@ -27,6 +28,10 @@ fn document_view_titles_and_blocks_round_trip_through_a_test_window(cx: &mut Tes
         Block::heading(1, "Hello, Limn"),
         Block::paragraph("It works."),
     ];
+
+    cx.update(|cx| {
+        cx.set_global(ColorThemeGlobal(ColorTheme::paper()));
+    });
 
     let window = cx.add_window(|_, _cx| DocumentView {
         title: "hello.md".into(),
@@ -54,18 +59,19 @@ fn document_view_titles_and_blocks_round_trip_through_a_test_window(cx: &mut Tes
 /// entry point in `main.rs` does the same; running it here lets us build
 /// real `EditorView` / `SettingsView` / `AppShell` entities inside the
 /// `TestAppContext`.
-fn install_globals(cx: &mut TestAppContext, config: LimnConfig) {
+fn install_globals(cx: &mut TestAppContext, config: &LimnConfig) {
     cx.update(|cx| {
         gpui_component::init(cx);
         cx.set_global(FeatureFlags::default());
-        cx.set_global(AppConfig(config));
+        cx.set_global(AppConfig(config.clone()));
+        cx.set_global(ColorThemeGlobal(ColorTheme::from_config(config.theme)));
         limn_ui::actions::bind_keys(cx);
     });
 }
 
 #[gpui::test]
 fn app_shell_screen_swaps_on_open_and_close_settings_actions(cx: &mut TestAppContext) {
-    install_globals(cx, LimnConfig::default());
+    install_globals(cx, &LimnConfig::default());
 
     // Build a real editor (with no backing file — Welcome-style), wrap it
     // in the shell, and wrap the shell in a `Root` — the same layering as
@@ -117,7 +123,7 @@ fn app_shell_screen_swaps_on_open_and_close_settings_actions(cx: &mut TestAppCon
 
 #[gpui::test]
 fn settings_view_save_writes_disk_and_updates_app_config_global(cx: &mut TestAppContext) {
-    install_globals(cx, LimnConfig::default());
+    install_globals(cx, &LimnConfig::default());
 
     let tmp = tempfile::tempdir().expect("tempdir");
     let config_path = tmp.path().join("config.toml");
@@ -194,6 +200,7 @@ fn toggle_palette_is_a_no_op_while_settings_screen_is_active(cx: &mut TestAppCon
         gpui_component::init(cx);
         cx.set_global(flags);
         cx.set_global(AppConfig(LimnConfig::default()));
+        cx.set_global(ColorThemeGlobal(ColorTheme::paper()));
         limn_ui::actions::bind_keys(cx);
     });
 
@@ -251,7 +258,7 @@ fn theme_global_reflects_config_after_toggle(cx: &mut TestAppContext) {
         theme: limn_service::Theme::Light,
         vault_path: None,
     };
-    install_globals(cx, light_config);
+    install_globals(cx, &light_config);
 
     // Seed the gpui-component Theme global the way `run_editable` does at
     // startup, then assert it reflects the Light config.
@@ -302,6 +309,7 @@ fn toggle_palette_opens_with_searchable_list(cx: &mut TestAppContext) {
         gpui_component::init(cx);
         cx.set_global(flags);
         cx.set_global(AppConfig(LimnConfig::default()));
+        cx.set_global(ColorThemeGlobal(ColorTheme::paper()));
         limn_ui::actions::bind_keys(cx);
     });
 
@@ -333,4 +341,38 @@ fn toggle_palette_opens_with_searchable_list(cx: &mut TestAppContext) {
         // the assertable contract here is "a dialog is open".
     })
     .expect("post-toggle dialog assertion");
+}
+
+/// Wave 10-C: startup wires `ColorThemeGlobal` from `LimnConfig.theme`.
+/// A Light config must produce the paper theme's semantic roles in the
+/// installed global.
+#[gpui::test]
+fn color_theme_global_reflects_config_at_startup(cx: &mut TestAppContext) {
+    let config = LimnConfig {
+        theme: limn_service::Theme::Light,
+        ..LimnConfig::default()
+    };
+    install_globals(cx, &config);
+    cx.update(|cx| {
+        let global = cx.global::<ColorThemeGlobal>();
+        assert_eq!(global.0.surface_app, ColorTheme::paper().surface_app);
+        assert_eq!(global.0.text_body, ColorTheme::paper().text_body);
+        assert_eq!(global.0.editor_text, ColorTheme::paper().editor_text);
+    });
+}
+
+/// Wave 10-C: a Dark config must produce the ink theme's semantic roles
+/// in the installed global.
+#[gpui::test]
+fn color_theme_global_dark_config_gives_ink_values(cx: &mut TestAppContext) {
+    let config = LimnConfig {
+        theme: limn_service::Theme::Dark,
+        ..LimnConfig::default()
+    };
+    install_globals(cx, &config);
+    cx.update(|cx| {
+        let global = cx.global::<ColorThemeGlobal>();
+        assert_eq!(global.0.surface_app, ColorTheme::ink().surface_app);
+        assert_eq!(global.0.editor_text, ColorTheme::ink().editor_text);
+    });
 }

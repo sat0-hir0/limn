@@ -35,6 +35,7 @@ use nucleo_matcher::{Config, Matcher};
 
 use limn_service::{Vault, VaultEntry};
 
+use crate::actions::OpenSettings;
 use crate::EditorView;
 
 /// A command the palette can invoke. Stable identifier matched on at
@@ -360,10 +361,13 @@ impl ListDelegate for PaletteDelegate {
                         cx.notify();
                     }
                     CommandId::OpenSettings => {
-                        // Wave 8 turns this into a settings view
-                        // transition; placeholder log for now.
-                        eprintln!("limn-ui: command selected: OpenSettings");
+                        // Close the palette first so the editor screen is
+                        // not partially obscured by the dialog while the
+                        // shell swaps screens; then dispatch the
+                        // `OpenSettings` action, which the `AppShell`
+                        // handler picks up (Wave 8 / ADR-0010).
                         window.close_dialog(cx);
+                        window.dispatch_action(Box::new(OpenSettings), cx);
                     }
                 }
             }

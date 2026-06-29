@@ -24,6 +24,10 @@ nucleo-matcher = "0.3"
 # Need the `test-support` feature so `#[gpui::test]` resolves
 # `TestAppContext` and the `run_test` helper.
 gpui = { workspace = true, features = ["test-support"] }
+# Wave 8 settings save test writes to a tempfile rather than the user's
+# real `~/.config/limn/config.toml`. Already in the lock graph via
+# limn-service's dev-dependencies — adding it here introduces no new crate.
+tempfile = "3"
 
 [lib]
 path = "src/lib.rs"

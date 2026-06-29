@@ -20,7 +20,7 @@ use gpui_platform::application;
 
 use limn_core::markdown;
 use limn_service::{Document, LimnConfig, RawDocument, Vault};
-use limn_ui::{file_title, AppConfig, DocumentView, EditorView, FeatureFlags};
+use limn_ui::{file_title, AppConfig, AppShell, DocumentView, EditorView, FeatureFlags};
 
 const WELCOME_MD: &str = include_str!("welcome.md");
 const WELCOME_TITLE: &str = "Welcome";
@@ -163,8 +163,13 @@ fn run_editable(flags: FeatureFlags, config: LimnConfig) {
                 // Focus the editor so the first keystroke lands in
                 // the buffer without a click.
                 editor.update(cx, |view, cx| view.focus(window, cx));
-                // The window's first-level view must be a `Root`.
-                cx.new(|cx| Root::new(editor, window, cx))
+                // Wave 8: the editor is now wrapped in an `AppShell`
+                // that owns view switching (editor ↔ settings) and the
+                // palette dialog overlay; the `Root` then wraps the
+                // shell since the window's first-level view must be a
+                // `Root` (ADR-0010).
+                let shell = cx.new(|cx| AppShell::new(editor, window, cx));
+                cx.new(|cx| Root::new(shell, window, cx))
             })
             .expect("opening the main window should succeed"); // limn:allow-panic: window creation failure is unrecoverable at startup
             cx.update(|cx| cx.activate(true));

@@ -24,10 +24,8 @@ use gpui::{
     Task, Window,
 };
 use gpui_component::input::{Input, InputEvent, InputState};
-use gpui_component::{Root, WindowExt as _};
 
-use crate::actions::TogglePalette;
-use crate::{file_title, FeatureFlags, PaletteView};
+use crate::file_title;
 
 use limn_service::{RawDocument, Vault};
 
@@ -59,9 +57,9 @@ pub struct EditorView {
     pending_save: Task<()>,
     /// The view's own focus handle. The render root is `track_focus`d on
     /// it so the `EditorView` is always present on the window's dispatch
-    /// (focus) tree. That placement is what lets a globally-dispatched
-    /// action (e.g. [`TogglePalette`]) reach this view's `on_action`
-    /// handler — see `focus` and `render` for the focus reasoning.
+    /// (focus) tree. That placement keeps the editor on the focus chain
+    /// while its parent `AppShell` (Wave 8) handles the actions that used
+    /// to live here (`TogglePalette`).
     focus_handle: FocusHandle,
 }
 
@@ -216,67 +214,6 @@ impl EditorView {
         }
     }
 
-    /// Handle the [`TogglePalette`] action: open the command palette
-    /// modal, or close it if one is already open.
-    ///
-    /// Gated on `LIMN_FEAT_PALETTE`: when the flag is off the action is a
-    /// no-op (the keybinding is still registered, but the editable shell
-    /// otherwise behaves as before). The flag is layered on
-    /// `LIMN_FEAT_EDIT` — this handler only exists on the editable path,
-    /// which is the only one that builds a `gpui-component` `Root`, and a
-    /// `Root` is required for the Dialog overlay the palette renders into.
-    ///
-    /// A fresh [`PaletteView`] is created on every open so no selection or
-    /// query state survives across opens; the `EditorView` deliberately
-    /// holds no palette field.
-    #[expect(
-        clippy::unused_self,
-        reason = "signature is fixed by gpui's on_action listener contract; \
-                  the handler reads globals, the window, and the current \
-                  entity via cx, not self's fields"
-    )]
-    fn on_toggle_palette(
-        &mut self,
-        _: &TogglePalette,
-        window: &mut Window,
-        cx: &mut Context<Self>,
-    ) {
-        if !cx.global::<FeatureFlags>().palette {
-            return;
-        }
-
-        if window.has_active_dialog(cx) {
-            window.close_dialog(cx);
-            return;
-        }
-
-        // Hand the palette a weak handle back to this editor so its
-        // "Open File" confirm can swap the buffer (Wave 6). Weak avoids a
-        // reference cycle (editor → dialog → palette → editor) and lets
-        // the palette degrade gracefully if the editor is gone.
-        let editor = cx.entity().downgrade();
-        let palette = cx.new(|cx| PaletteView::new(editor, window, cx));
-        window.open_dialog(cx, {
-            let palette = palette.clone();
-            move |dialog, _, _| {
-                // No title / footer / close button: the palette is a bare
-                // command list. `keyboard(true)` (the default) keeps the
-                // Dialog's Esc-to-close. The list's own Esc/Enter live in
-                // the `"List"` context; see ADR-0008 for why these are
-                // independent of limn's action contexts.
-                dialog.title("Command Palette").child(palette.clone())
-            }
-        });
-
-        // `open_dialog` focuses the Dialog node, not the List inside it.
-        // GPUI dispatches keys from the focused node upward, so the List's
-        // `"List"` context (up / down / enter) is only on the dispatch
-        // path when the List itself is focused. Without this the palette
-        // opens but keyboard selection is dead. Mirrors `gpui-component`'s
-        // `Combobox`, which focuses its list every time the overlay opens.
-        palette.update(cx, |palette, cx| palette.focus_list(window, cx));
-    }
-
     /// Current buffer text. Exposed so tests can assert that typed input
     /// reached the buffer (the wave's UAT condition).
     #[must_use]
@@ -354,20 +291,20 @@ impl Focusable for EditorView {
 }
 
 impl Render for EditorView {
-    fn render(&mut self, window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
+    fn render(&mut self, _window: &mut Window, _cx: &mut Context<Self>) -> impl IntoElement {
         let bg = rgb(0x00fa_f9f6);
         let fg = rgb(0x001a_1a1a);
 
         div()
             // Put the `EditorView` on the window's focus/dispatch tree so
-            // its `on_action` handler is reachable. `key_context("Editor")`
-            // names the context after the view (ADR-0008: context name =
-            // view name; the gpui-component `Root`'s own context is not
-            // used for limn actions). `on_action` binds the action type to
-            // this view's handler via `cx.listener`.
+            // it stays an ancestor of the focused `InputState` on the
+            // dispatch tree (ADR-0008). `key_context("Editor")` names the
+            // context after the view; Wave 8 moved the action handlers
+            // (`TogglePalette`) and the dialog overlay up to `AppShell`,
+            // so the editor only declares its context and focus chain
+            // here.
             .track_focus(&self.focus_handle)
             .key_context("Editor")
-            .on_action(cx.listener(Self::on_toggle_palette))
             .size_full()
             .bg(bg)
             .text_color(fg)
@@ -389,12 +326,5 @@ impl Render for EditorView {
                     .min_h(px(0.0))
                     .child(Input::new(&self.state).h_full()),
             )
-            // Render the gpui-component Dialog overlay layer. The
-            // component's `Root` does NOT draw active dialogs itself
-            // (`Root::render` omits the dialog layer), so without this the
-            // palette's `open_dialog` would mutate state but paint
-            // nothing. `render_dialog_layer` returns `None` when no dialog
-            // is open, so this is inert until the palette is toggled.
-            .children(Root::render_dialog_layer(window, cx))
     }
 }

@@ -7,7 +7,7 @@ the same PR.
 
 | Flag | Env var | Stage | Added | Owner | Notes |
 |---|---|---|---|---|---|
-| `edit` | `LIMN_FEAT_EDIT` | 1: hidden | M2 (Issue #3) | sat0-hir0 | Editable editor backed by `gpui-component` `InputState` (ADR-0005). Wave 1: input / cursor / selection / delete / copy-cut-paste / undo-redo / IME. Autosave is a later wave. |
+| `edit` | `LIMN_FEAT_EDIT` | 1: hidden | M2 (Issue #3) | sat0-hir0 | Editable editor backed by `gpui-component` `InputState` (ADR-0005). Wave 1: input / cursor / selection / delete / copy-cut-paste / undo-redo / IME. Autosave is a later wave. Wave 8 adds the `AppShell` + `SettingsView` view-switching under this same flag (ADR-0010). |
 
 ## Stage reference
 

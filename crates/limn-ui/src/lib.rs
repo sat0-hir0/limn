@@ -14,11 +14,15 @@ pub mod config_global;
 pub mod editor;
 pub mod feature_flags;
 pub mod palette;
+pub mod settings;
+pub mod shell;
 
 pub use config_global::AppConfig;
 pub use editor::EditorView;
 pub use feature_flags::FeatureFlags;
 pub use palette::PaletteView;
+pub use settings::SettingsView;
+pub use shell::{AppShell, ScreenKind};
 
 /// File name for the header strip, or `(unnamed)` when there is none.
 ///

@@ -3620,6 +3620,7 @@ dependencies = [
  "limn-core",
  "limn-service",
  "nucleo-matcher",
+ "tempfile",
 ]
 
 [[package]]

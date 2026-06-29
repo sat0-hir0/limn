@@ -153,6 +153,40 @@ new persistence path.
 
 ---
 
+## Addendum (Wave 9, 2026-06-29)
+
+The intentional shortcut recorded in the trade-offs above — *"applying
+`font` / `theme` to rendering is deferred (the change is observable on
+next launch)"* — is resolved in Wave 9. Persisting the draft and
+re-rendering the running session are now the same action:
+
+- **Startup** (`run_editable`, `crates/limn-ui/src/main.rs`) pipes the
+  loaded `LimnConfig.theme` into `gpui_component::Theme::change(.., None,
+  cx)` right after `cx.set_global(AppConfig(..))`, then `font_family` /
+  `font_size` into the `Theme` global, and calls `cx.refresh_windows()`.
+  Font fields are written *after* `Theme::change` because `change` runs
+  `apply_config`, which resets them — the override has to win.
+- **Save** (`SettingsView::save`, `crates/limn-ui/src/settings.rs`)
+  applies the same theme/font update inside the write-success `cx.update`
+  closure, passing `Some(window)` so `Theme::change` fires
+  `window.refresh()` itself. The synchronous test path (`save_to_path`)
+  mirrors this with `None` + an explicit `cx.refresh_windows()` to keep
+  the two paths semantically equivalent.
+
+`run_read_only` stays untouched — it never initialises gpui-component, so
+the theme wiring lives entirely behind `LIMN_FEAT_EDIT`.
+
+Render pixel-verification remains outside gpui headless test coverage;
+the observable contract (`Theme::global(cx).mode == expected` after a
+save) is asserted in
+`crates/limn-ui/tests/e2e_render.rs::theme_global_reflects_config_after_toggle`.
+
+This addendum does **not** change the structural decision above; it only
+records that the deferred-rendering shortcut is now paid down. The ADR
+stays `Proposed` until a maintainer promotes it.
+
+---
+
 ## Considered Alternatives
 
 ### Alternative A: Add a "mode" flag to `EditorView`

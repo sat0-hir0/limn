@@ -16,6 +16,7 @@ pub mod feature_flags;
 pub mod palette;
 pub mod settings;
 pub mod shell;
+pub mod theme;
 
 pub use config_global::AppConfig;
 pub use editor::EditorView;
@@ -23,6 +24,7 @@ pub use feature_flags::FeatureFlags;
 pub use palette::PaletteView;
 pub use settings::SettingsView;
 pub use shell::{AppShell, ScreenKind};
+pub use theme::{Palette, Theme};
 
 /// File name for the header strip, or `(unnamed)` when there is none.
 ///

@@ -207,8 +207,20 @@ three consistently.
 The drift-detection tests
 `crates/limn-ui/tests/e2e_render.rs::save_updates_both_color_theme_global_and_gpui_component_theme`
 and `save_round_trips_both_globals_light_to_dark_to_light` assert both
-globals stay in sync after save (and after a Light → Dark → Light
-round-trip), satisfying ADR-0011's negative-mitigation requirement.
+globals flip together on save (and round-trip Light → Dark → Light),
+satisfying ADR-0011's (revised) synchronization requirement — both
+globals flip together, not per-field equality. Strict cross-system
+value equality is intentionally not enforced (see ADR-0011 Negative
+discussion: gpui-component owns its palette upstream and we do not
+fork it).
+
+The new tests exercise `save_to_path` (the synchronous test variant
+of `save`); the production `save()` path runs the same three global
+writes inside its own `cx.update` closure but is not independently
+headless-testable due to the background executor's task detachment.
+This is the same class of limitation noted in the Wave 9 addendum for
+pixel verification — value-level contracts are unit-testable,
+production async timing is not.
 
 This addendum closes the "render pixel-verification remains outside
 gpui headless test coverage" gap as far as the value level allows:

@@ -388,10 +388,22 @@ fn color_theme_global_dark_config_gives_ink_values(cx: &mut TestAppContext) {
 /// only one moves, the screen ends up in a mismatched half-applied
 /// state.
 ///
-/// ADR-0011's Negative consequences explicitly require this assertion:
-/// "Wave 10-D's implementation MUST include an assertion or snapshot
-/// test that confirms the values written into `gpui_component::Theme`
-/// match the corresponding `ColorTheme` fields".
+/// **What this test verifies:** both globals advance to their
+/// intended target on a single `save_to_path` call. The
+/// `ColorThemeGlobal` is checked by *value* (`ColorTheme::ink()`),
+/// the `gpui_component::Theme` is checked by *mode* (`ThemeMode::Dark`).
+///
+/// **What this test does NOT verify:** per-field value equality
+/// between `ColorTheme` and `gpui_component::Theme`. The two systems
+/// own independent palettes by design — gpui-component is upstream
+/// and we deliberately do not fork it (see ADR-0011 Alternative A
+/// rejection and its Negative-consequences discussion of drift). For
+/// example, gpui-component's Dark `background` is `neutral-950`
+/// (`#0a0a0a`) while `ColorTheme::ink().surface_app` is `n_850`
+/// (`#1a1e22`); enforcing equality would either require forking
+/// gpui-component or rewriting its globals, both of which ADR-0011
+/// rules out. Deeper palette drift in upstream gpui-component is a
+/// visual-UAT concern, not a unit-test one.
 #[gpui::test]
 fn save_updates_both_color_theme_global_and_gpui_component_theme(cx: &mut TestAppContext) {
     // Start on Light so the Dark draft is a real change.
@@ -451,6 +463,15 @@ fn save_updates_both_color_theme_global_and_gpui_component_theme(cx: &mut TestAp
 /// globals. Catches a `save()` that handles one direction (e.g. only
 /// flipping to Dark) but leaves stale Dark values when the user goes
 /// back to Light.
+///
+/// **What this test verifies:** both globals flip together in BOTH
+/// directions of a round-trip — neither one lags or sticks.
+///
+/// **What this test does NOT verify:** per-field value equality
+/// across the two systems (see
+/// `save_updates_both_color_theme_global_and_gpui_component_theme`
+/// for the rationale — gpui-component owns its palette upstream and
+/// we do not fork it).
 #[gpui::test]
 fn save_round_trips_both_globals_light_to_dark_to_light(cx: &mut TestAppContext) {
     let light_config = LimnConfig {

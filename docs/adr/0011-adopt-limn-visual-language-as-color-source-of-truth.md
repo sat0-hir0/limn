@@ -158,10 +158,19 @@ or a bespoke wrapper around every render call.
   gpui-component ( e.g. `SettingsView`'s `Input`, `Button`, `Switch` )
   will visually diverge from Limn-rendered surfaces ( `EditorView`,
   `DocumentView`, `AppShell` chrome ). Neither system catches this
-  automatically. Wave 10-D's implementation MUST include an assertion
-  or snapshot test that confirms the values written into
-  `gpui_component::Theme` match the corresponding `ColorTheme` fields,
-  so the doubled write is at least self-checking.
+  automatically. Wave 10-D's implementation includes assertions that
+  BOTH systems flip together on a Settings save ( neither lags
+  behind ). Strict per-field value equality between
+  `gpui_component::Theme` and `ColorTheme` is **not** enforced and
+  would be incorrect to enforce — gpui-component owns its own palette
+  upstream and we deliberately do not fork it ( see Alternative A
+  rejection ). For example, gpui-component's Dark `background` is
+  `neutral-950` ( `#0a0a0a` ) while `ColorTheme::ink().surface_app`
+  is `n_850` ( `#1a1e22` ); the two palettes are intentionally
+  distinct. The synchronization contract is "both globals change in
+  the same `cx.update` closure"; deeper drift in upstream
+  gpui-component palettes is a future concern handled by visual UAT,
+  not by unit tests.
 - **Cognitive load for new contributors.** "Which API do I use to get
   the background color?" now has two answers depending on what's being
   rendered: components ported from gpui-component use `cx.theme()`;

@@ -33,7 +33,7 @@ use gpui_component::{
 use limn_service::{LimnConfig, Theme as LimnTheme};
 
 use crate::actions::{CloseSettings, SETTINGS_CONTEXT};
-use crate::AppConfig;
+use crate::{AppConfig, ColorTheme, ColorThemeGlobal};
 
 /// Editable settings screen backed by a `draft` copy of [`LimnConfig`].
 ///
@@ -262,6 +262,9 @@ impl SettingsView {
             Ok(()) => {
                 if let Err(e) = cx.update(|window, cx| {
                     cx.set_global(AppConfig(draft.clone()));
+                    // Wave 10-D: sync the Limn-side color theme so EditorView /
+                    // DocumentView pick up the change next render (ADR-0011).
+                    cx.set_global(ColorThemeGlobal(ColorTheme::from_config(draft.theme)));
                     // Wave 9: apply the saved theme/font to gpui-component's
                     // Theme global so the running session re-renders. `window`
                     // is available here, so pass `Some(window)` to fire
@@ -317,6 +320,9 @@ impl SettingsView {
         match draft.save_to(path) {
             Ok(()) => {
                 cx.set_global(AppConfig(draft.clone()));
+                // Wave 10-D: sync the Limn-side color theme so EditorView /
+                // DocumentView pick up the change next render (ADR-0011).
+                cx.set_global(ColorThemeGlobal(ColorTheme::from_config(draft.theme)));
                 // Wave 9: apply theme/font to the gpui-component Theme global
                 // (sync test path). No `&mut Window` is in scope here, so we
                 // pass `None` to `Theme::change` and drive the redraw with

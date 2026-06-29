@@ -380,3 +380,136 @@ fn color_theme_global_dark_config_gives_ink_values(cx: &mut TestAppContext) {
         assert_eq!(global.0, ColorTheme::ink());
     });
 }
+
+/// Wave 10-D drift-detection: Settings save must update BOTH globals
+/// together — `ColorThemeGlobal` (which the Limn-side `EditorView` /
+/// `DocumentView` read from per ADR-0011) and `gpui_component::Theme`
+/// (which the rest of the gpui-component widget tree reads from). If
+/// only one moves, the screen ends up in a mismatched half-applied
+/// state.
+///
+/// ADR-0011's Negative consequences explicitly require this assertion:
+/// "Wave 10-D's implementation MUST include an assertion or snapshot
+/// test that confirms the values written into `gpui_component::Theme`
+/// match the corresponding `ColorTheme` fields".
+#[gpui::test]
+fn save_updates_both_color_theme_global_and_gpui_component_theme(cx: &mut TestAppContext) {
+    // Start on Light so the Dark draft is a real change.
+    let light_config = LimnConfig {
+        font: limn_service::FontConfig {
+            family: String::new(),
+            size: 14,
+        },
+        theme: limn_service::Theme::Light,
+        vault_path: None,
+    };
+    install_globals(cx, &light_config);
+
+    // Seed the gpui-component Theme global the way `run_editable` does at
+    // startup so we have a Light baseline to flip off.
+    cx.update(|cx| {
+        Theme::change(ThemeMode::Light, None, cx);
+        assert_eq!(Theme::global(cx).mode, ThemeMode::Light);
+        assert_eq!(cx.global::<ColorThemeGlobal>().0, ColorTheme::paper());
+    });
+
+    let tmp = tempfile::tempdir().expect("tempdir");
+    let config_path = tmp.path().join("config.toml");
+
+    let window = cx.add_window(SettingsView::new);
+    cx.run_until_parked();
+
+    // Flip to Dark and save.
+    window
+        .update(cx, |view, window, cx| {
+            view.set_test_inputs("", "14", "", true, window, cx);
+            let ok = view.save_to_path(&config_path, cx);
+            assert!(ok, "save should succeed");
+        })
+        .expect("update settings view");
+
+    cx.run_until_parked();
+
+    // Both globals must have flipped to Dark / ink. If only one of these
+    // assertions fails, save() updated one side but not the other —
+    // exactly the drift this test exists to catch.
+    cx.update(|cx| {
+        assert_eq!(
+            cx.global::<ColorThemeGlobal>().0,
+            ColorTheme::ink(),
+            "ColorThemeGlobal must flip to ink after saving a Dark draft",
+        );
+        assert_eq!(
+            Theme::global(cx).mode,
+            ThemeMode::Dark,
+            "gpui_component::Theme must flip to Dark after saving a Dark draft",
+        );
+    });
+}
+
+/// Wave 10-D inverse drift test: Light → Dark → Light round-trips both
+/// globals. Catches a `save()` that handles one direction (e.g. only
+/// flipping to Dark) but leaves stale Dark values when the user goes
+/// back to Light.
+#[gpui::test]
+fn save_round_trips_both_globals_light_to_dark_to_light(cx: &mut TestAppContext) {
+    let light_config = LimnConfig {
+        font: limn_service::FontConfig {
+            family: String::new(),
+            size: 14,
+        },
+        theme: limn_service::Theme::Light,
+        vault_path: None,
+    };
+    install_globals(cx, &light_config);
+
+    cx.update(|cx| {
+        Theme::change(ThemeMode::Light, None, cx);
+    });
+
+    let tmp = tempfile::tempdir().expect("tempdir");
+    let config_path = tmp.path().join("config.toml");
+
+    let window = cx.add_window(SettingsView::new);
+    cx.run_until_parked();
+
+    // Light → Dark.
+    window
+        .update(cx, |view, window, cx| {
+            view.set_test_inputs("", "14", "", true, window, cx);
+            assert!(
+                view.save_to_path(&config_path, cx),
+                "Dark save should succeed"
+            );
+        })
+        .expect("update settings view (Dark)");
+    cx.run_until_parked();
+    cx.update(|cx| {
+        assert_eq!(cx.global::<ColorThemeGlobal>().0, ColorTheme::ink());
+        assert_eq!(Theme::global(cx).mode, ThemeMode::Dark);
+    });
+
+    // Dark → Light.
+    window
+        .update(cx, |view, window, cx| {
+            view.set_test_inputs("", "14", "", false, window, cx);
+            assert!(
+                view.save_to_path(&config_path, cx),
+                "Light save should succeed"
+            );
+        })
+        .expect("update settings view (Light)");
+    cx.run_until_parked();
+    cx.update(|cx| {
+        assert_eq!(
+            cx.global::<ColorThemeGlobal>().0,
+            ColorTheme::paper(),
+            "ColorThemeGlobal must flip back to paper on Dark→Light",
+        );
+        assert_eq!(
+            Theme::global(cx).mode,
+            ThemeMode::Light,
+            "gpui_component::Theme must flip back to Light on Dark→Light",
+        );
+    });
+}

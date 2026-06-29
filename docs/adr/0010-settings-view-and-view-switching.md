@@ -187,6 +187,38 @@ stays `Proposed` until a maintainer promotes it.
 
 ---
 
+## Addendum (Wave 10-D, 2026-06-30)
+
+The Wave 9 addendum noted that `gpui_component::Theme::global` updates
+on save but did not yet promise the Editor / DocumentView themselves
+re-rendered with the new colors — those surfaces still read hardcoded
+`rgb()` literals at the time.
+
+Wave 10-C migrated `EditorView::render` and `DocumentView::render` to
+read from the Limn-side `ColorThemeGlobal` (see
+[ADR-0011](0011-adopt-limn-visual-language-as-color-source-of-truth.md)),
+and Wave 10-D wires Settings save to update that global in the same
+`cx.update` closure that updates `AppConfig` and the gpui-component
+theme. The three writes (`AppConfig`, `gpui_component::Theme` via
+`Theme::change`, `ColorThemeGlobal` via `set_global`) now happen as a
+single atomic update under `cx.update`, so the next frame reflects all
+three consistently.
+
+The drift-detection tests
+`crates/limn-ui/tests/e2e_render.rs::save_updates_both_color_theme_global_and_gpui_component_theme`
+and `save_round_trips_both_globals_light_to_dark_to_light` assert both
+globals stay in sync after save (and after a Light → Dark → Light
+round-trip), satisfying ADR-0011's negative-mitigation requirement.
+
+This addendum closes the "render pixel-verification remains outside
+gpui headless test coverage" gap as far as the value level allows:
+actual on-screen pixel verification still requires UAT, but the
+value-level contract (config → both globals → EditorView /
+DocumentView read paths) is now fully unit-tested. The ADR stays
+`Proposed` until a maintainer promotes it.
+
+---
+
 ## Considered Alternatives
 
 ### Alternative A: Add a "mode" flag to `EditorView`

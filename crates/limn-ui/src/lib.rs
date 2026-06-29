@@ -24,7 +24,7 @@ pub use feature_flags::FeatureFlags;
 pub use palette::PaletteView;
 pub use settings::SettingsView;
 pub use shell::{AppShell, ScreenKind};
-pub use theme::{Palette, Theme};
+pub use theme::{ColorPalette, ColorTheme};
 
 /// File name for the header strip, or `(unnamed)` when there is none.
 ///

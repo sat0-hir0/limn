@@ -1,11 +1,14 @@
 //! Color theme for the Limn design system.
 //!
 //! Two built-in themes are provided:
-//! - [`Theme::paper()`] — light (default)
-//! - [`Theme::ink()`] — dark
+//! - [`ColorTheme::paper()`] — light (default)
+//! - [`ColorTheme::ink()`] — dark
 //!
-//! [`Palette`] exposes the raw color ramp. [`Theme`] maps palette colors
-//! to semantic roles (surface, text, accent, editor, status).
+//! Use [`ColorTheme::from_config()`] to resolve the active theme from the
+//! user's persisted [`limn_service::Theme`] choice.
+//!
+//! [`ColorPalette`] exposes the raw color ramp. [`ColorTheme`] maps palette
+//! colors to semantic roles (surface, text, accent, editor, status).
 //! Design source of truth: Limn design system (see `docs/design/`).
 
 use gpui::{rgb, rgba, Rgba};
@@ -13,9 +16,9 @@ use gpui::{rgb, rgba, Rgba};
 /// Raw palette — the cool-tinted neutral ramp, the single accent,
 /// approved accent alternates, and muted status hues. Theme-independent.
 #[derive(Debug, Clone, Copy)]
-pub struct Palette;
+pub struct ColorPalette;
 
-impl Palette {
+impl ColorPalette {
     // ---- Neutral ramp — cool paper → ink ----
     #[must_use]
     pub fn n_0() -> Rgba {
@@ -157,10 +160,10 @@ impl Palette {
     }
 }
 
-/// Semantic color roles. Build with `Theme::paper()` (light, default)
-/// or `Theme::ink()` (dark). Field names mirror the CSS `--*` aliases.
-#[derive(Clone, Copy, Debug)]
-pub struct Theme {
+/// Semantic color roles. Build with `ColorTheme::paper()` (light, default)
+/// or `ColorTheme::ink()` (dark). Field names mirror the CSS `--*` aliases.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct ColorTheme {
     // Text
     pub text_strong: Rgba,
     pub text_body: Rgba,
@@ -207,49 +210,49 @@ pub struct Theme {
     pub critical: Rgba,
 }
 
-impl Theme {
+impl ColorTheme {
     /// PAPER — light, default. Cool paper ground, ink text.
     #[must_use]
     pub fn paper() -> Self {
         Self {
-            text_strong: Palette::n_900(),
-            text_body: Palette::n_700(),
-            text_muted: Palette::n_500(),
-            text_faint: Palette::n_400(),
-            text_accent: Palette::blue_600(),
-            text_on_accent: Palette::n_0(),
-            text_inverse: Palette::n_50(),
+            text_strong: ColorPalette::n_900(),
+            text_body: ColorPalette::n_700(),
+            text_muted: ColorPalette::n_500(),
+            text_faint: ColorPalette::n_400(),
+            text_accent: ColorPalette::blue_600(),
+            text_on_accent: ColorPalette::n_0(),
+            text_inverse: ColorPalette::n_50(),
 
-            surface_app: Palette::n_50(),
-            surface_panel: Palette::n_0(),
-            surface_raised: Palette::n_0(),
-            surface_sunken: Palette::n_100(),
-            surface_hover: Palette::n_100(),
-            surface_active: Palette::n_150(),
+            surface_app: ColorPalette::n_50(),
+            surface_panel: ColorPalette::n_0(),
+            surface_raised: ColorPalette::n_0(),
+            surface_sunken: ColorPalette::n_100(),
+            surface_hover: ColorPalette::n_100(),
+            surface_active: ColorPalette::n_150(),
             surface_overlay: rgba(0x1518_1b52), // ink @ 0.32
 
-            border_hairline: Palette::n_200(),
-            border_strong: Palette::n_300(),
-            border_accent: Palette::blue_500(),
-            border_focus: Palette::blue_500(),
+            border_hairline: ColorPalette::n_200(),
+            border_strong: ColorPalette::n_300(),
+            border_accent: ColorPalette::blue_500(),
+            border_focus: ColorPalette::blue_500(),
 
-            accent: Palette::blue_500(),
-            accent_hover: Palette::blue_600(),
-            accent_quiet: Palette::blue_400(),
-            accent_contrast: Palette::n_0(),
-            accent_tint: Palette::blue_50(),
-            accent_line: Palette::blue_500(),
+            accent: ColorPalette::blue_500(),
+            accent_hover: ColorPalette::blue_600(),
+            accent_quiet: ColorPalette::blue_400(),
+            accent_contrast: ColorPalette::n_0(),
+            accent_tint: ColorPalette::blue_50(),
+            accent_line: ColorPalette::blue_500(),
 
-            editor_text: Palette::n_800(),
-            editor_cursor: Palette::blue_500(),
+            editor_text: ColorPalette::n_800(),
+            editor_cursor: ColorPalette::blue_500(),
             editor_selection: rgba(0x3e6d_b529), // blue-500 @ 0.16
-            editor_syntax: Palette::n_400(),
-            editor_focus_dim: Palette::n_400(),
-            editor_link: Palette::blue_600(),
+            editor_syntax: ColorPalette::n_400(),
+            editor_focus_dim: ColorPalette::n_400(),
+            editor_link: ColorPalette::blue_600(),
 
-            positive: Palette::green_500(),
-            caution: Palette::amber_500(),
-            critical: Palette::red_500(),
+            positive: ColorPalette::green_500(),
+            caution: ColorPalette::amber_500(),
+            critical: ColorPalette::red_500(),
         }
     }
 
@@ -257,49 +260,62 @@ impl Theme {
     #[must_use]
     pub fn ink() -> Self {
         Self {
-            text_strong: Palette::n_50(),
+            text_strong: ColorPalette::n_50(),
             text_body: rgb(0x00c8_ccce),
             text_muted: rgb(0x008d_9398),
             text_faint: rgb(0x0063_6a6f),
-            text_accent: Palette::blue_300(),
-            text_on_accent: Palette::n_0(),
-            text_inverse: Palette::n_900(),
+            text_accent: ColorPalette::blue_300(),
+            text_on_accent: ColorPalette::n_0(),
+            text_inverse: ColorPalette::n_900(),
 
-            surface_app: Palette::n_850(),
-            surface_panel: Palette::n_800(),
+            surface_app: ColorPalette::n_850(),
+            surface_panel: ColorPalette::n_800(),
             surface_raised: rgb(0x0024_2a2f),
-            surface_sunken: Palette::n_900(),
+            surface_sunken: ColorPalette::n_900(),
             surface_hover: rgba(0xffff_ff0a),   // white @ 0.04
             surface_active: rgba(0xffff_ff12),  // white @ 0.07
             surface_overlay: rgba(0x0809_0a8c), // near-black @ 0.55
 
             border_hairline: rgba(0xffff_ff17), // white @ 0.09
             border_strong: rgba(0xffff_ff29),   // white @ 0.16
-            border_accent: Palette::blue_400(),
-            border_focus: Palette::blue_400(),
+            border_accent: ColorPalette::blue_400(),
+            border_focus: ColorPalette::blue_400(),
 
-            accent: Palette::blue_400(),
-            accent_hover: Palette::blue_300(),
-            accent_quiet: Palette::blue_500(),
-            accent_contrast: Palette::n_900(),
+            accent: ColorPalette::blue_400(),
+            accent_hover: ColorPalette::blue_300(),
+            accent_quiet: ColorPalette::blue_500(),
+            accent_contrast: ColorPalette::n_900(),
             accent_tint: rgba(0x5c84_c229), // blue-400 @ 0.16
-            accent_line: Palette::blue_400(),
+            accent_line: ColorPalette::blue_400(),
 
             editor_text: rgb(0x00d4_d8da),
-            editor_cursor: Palette::blue_400(),
+            editor_cursor: ColorPalette::blue_400(),
             editor_selection: rgba(0x5c84_c242), // blue-400 @ 0.26
             editor_syntax: rgb(0x005c_6368),
             editor_focus_dim: rgb(0x004d_5358),
-            editor_link: Palette::blue_300(),
+            editor_link: ColorPalette::blue_300(),
 
             positive: rgb(0x006f_9e7c),
             caution: rgb(0x00c0_a261),
             critical: rgb(0x00c4_7b73),
         }
     }
+
+    /// Build a [`ColorTheme`] from the user's persisted theme choice.
+    ///
+    /// Render code should call this with the active [`limn_service::Theme`]
+    /// (sourced from [`limn_service::LimnConfig::theme`]) rather than
+    /// matching on the enum at every render site.
+    #[must_use]
+    pub fn from_config(theme: limn_service::Theme) -> Self {
+        match theme {
+            limn_service::Theme::Light => Self::paper(),
+            limn_service::Theme::Dark => Self::ink(),
+        }
+    }
 }
 
-impl Default for Theme {
+impl Default for ColorTheme {
     fn default() -> Self {
         Self::paper()
     }
@@ -307,56 +323,118 @@ impl Default for Theme {
 
 #[cfg(test)]
 mod tests {
+    // Direct f32 field comparisons below are exact: both sides come from
+    // the same deterministic `u8 -> f32 / 255.0` computation that gpui's
+    // `rgba()` macro performs, so bitwise equality holds.
+    #![allow(clippy::float_cmp)]
+
     use gpui::rgb;
 
     use super::*;
 
     #[test]
     fn palette_n50_hex() {
-        assert_eq!(Palette::n_50(), rgb(0x00f0_f3f4));
+        assert_eq!(ColorPalette::n_50(), rgb(0x00f0_f3f4));
     }
 
     #[test]
     fn palette_blue500_hex() {
-        assert_eq!(Palette::blue_500(), rgb(0x003e_6db5));
+        assert_eq!(ColorPalette::blue_500(), rgb(0x003e_6db5));
     }
 
     #[test]
     fn paper_surface_app() {
-        assert_eq!(Theme::paper().surface_app, Palette::n_50());
+        assert_eq!(ColorTheme::paper().surface_app, ColorPalette::n_50());
     }
 
     #[test]
     fn ink_surface_app() {
-        assert_eq!(Theme::ink().surface_app, Palette::n_850());
+        assert_eq!(ColorTheme::ink().surface_app, ColorPalette::n_850());
     }
 
     #[test]
     fn paper_accent() {
-        assert_eq!(Theme::paper().accent, Palette::blue_500());
+        assert_eq!(ColorTheme::paper().accent, ColorPalette::blue_500());
     }
 
     #[test]
     fn ink_accent() {
-        assert_eq!(Theme::ink().accent, Palette::blue_400());
+        assert_eq!(ColorTheme::ink().accent, ColorPalette::blue_400());
     }
 
     #[test]
     fn paper_editor_cursor() {
-        assert_eq!(Theme::paper().editor_cursor, Palette::blue_500());
+        assert_eq!(ColorTheme::paper().editor_cursor, ColorPalette::blue_500());
     }
 
     #[test]
     fn ink_editor_cursor() {
-        assert_eq!(Theme::ink().editor_cursor, Palette::blue_400());
+        assert_eq!(ColorTheme::ink().editor_cursor, ColorPalette::blue_400());
     }
 
     #[test]
     fn default_equals_paper() {
-        let default = Theme::default();
-        let paper = Theme::paper();
-        assert_eq!(default.surface_app, paper.surface_app);
-        assert_eq!(default.accent, paper.accent);
-        assert_eq!(default.editor_cursor, paper.editor_cursor);
+        assert_eq!(ColorTheme::default(), ColorTheme::paper());
+    }
+
+    #[test]
+    fn paper_and_ink_differ() {
+        assert_ne!(ColorTheme::paper(), ColorTheme::ink());
+    }
+
+    #[test]
+    fn paper_surface_overlay_is_ink_with_alpha() {
+        let overlay = ColorTheme::paper().surface_overlay;
+        // ink @ 0.32 — see doc comment in paper() impl
+        assert_eq!(overlay.r, f32::from(0x15_u8) / 255.0);
+        assert_eq!(overlay.g, f32::from(0x18_u8) / 255.0);
+        assert_eq!(overlay.b, f32::from(0x1b_u8) / 255.0);
+        assert_eq!(overlay.a, f32::from(0x52_u8) / 255.0);
+    }
+
+    #[test]
+    fn ink_surface_overlay_is_near_black_with_alpha() {
+        let overlay = ColorTheme::ink().surface_overlay;
+        // near-black @ 0.55
+        assert_eq!(overlay.r, f32::from(0x08_u8) / 255.0);
+        assert_eq!(overlay.g, f32::from(0x09_u8) / 255.0);
+        assert_eq!(overlay.b, f32::from(0x0a_u8) / 255.0);
+        assert_eq!(overlay.a, f32::from(0x8c_u8) / 255.0);
+    }
+
+    #[test]
+    fn ink_border_hairline_is_white_at_low_alpha() {
+        let border = ColorTheme::ink().border_hairline;
+        // white @ 0.09
+        assert_eq!(border.r, 1.0);
+        assert_eq!(border.g, 1.0);
+        assert_eq!(border.b, 1.0);
+        assert_eq!(border.a, f32::from(0x17_u8) / 255.0);
+    }
+
+    #[test]
+    fn paper_editor_selection_is_blue500_with_alpha() {
+        let sel = ColorTheme::paper().editor_selection;
+        // blue-500 @ 0.16
+        assert_eq!(sel.r, f32::from(0x3e_u8) / 255.0);
+        assert_eq!(sel.g, f32::from(0x6d_u8) / 255.0);
+        assert_eq!(sel.b, f32::from(0xb5_u8) / 255.0);
+        assert_eq!(sel.a, f32::from(0x29_u8) / 255.0);
+    }
+
+    #[test]
+    fn from_config_maps_light_to_paper() {
+        assert_eq!(
+            ColorTheme::from_config(limn_service::Theme::Light),
+            ColorTheme::paper()
+        );
+    }
+
+    #[test]
+    fn from_config_maps_dark_to_ink() {
+        assert_eq!(
+            ColorTheme::from_config(limn_service::Theme::Dark),
+            ColorTheme::ink()
+        );
     }
 }

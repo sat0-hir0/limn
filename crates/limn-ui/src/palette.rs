@@ -10,8 +10,10 @@
 //!
 //! The palette has two modes (see [`PaletteMode`]):
 //!
-//! - **Commands** (Wave 5): a static, non-searchable list of two
-//!   commands, "Open File..." and "Open Settings".
+//! - **Commands** (Wave 5; searchable since Wave 9): the built-in
+//!   command list ("Open File..." and "Open Settings"). The list opens
+//!   searchable and filters commands by case-insensitive substring on
+//!   their title as the user types.
 //! - **Files** (Wave 6): a fuzzy search over every `.md` file in the
 //!   vault. Selecting "Open File..." in Commands mode transitions the
 //!   palette into Files mode in place (the dialog stays open), flips the
@@ -328,9 +330,32 @@ impl ListDelegate for PaletteDelegate {
         cx: &mut Context<ListState<Self>>,
     ) -> Task<()> {
         // The corpus is the directly-listed vault (small), so matching
-        // inline is fine — no background task needed. We mutate `matched`
-        // and let the `ListState` re-measure on notify.
-        self.run_fuzzy(query);
+        // inline is fine — no background task needed. We mutate the current
+        // mode's row list and let the `ListState` re-measure on notify.
+        //
+        // Wave 9: Commands mode is now searchable too, so dispatch on the
+        // mode. Commands filter by case-insensitive substring on `title`;
+        // Files keep the fuzzy ranking.
+        match &mut self.mode {
+            PaletteMode::Commands { commands } => {
+                let all = builtin_commands();
+                *commands = if query.is_empty() {
+                    all
+                } else {
+                    let q = query.to_ascii_lowercase();
+                    all.into_iter()
+                        .filter(|c| c.title.to_ascii_lowercase().contains(&q))
+                        .collect()
+                };
+                // Re-borrowing `&self.mode` for `entries_default_selection`
+                // here would conflict with the `commands` mutable borrow, so
+                // derive the first-row selection from the filtered list len.
+                self.selected_index = (!commands.is_empty()).then(IndexPath::default);
+            }
+            PaletteMode::Files { .. } => {
+                self.run_fuzzy(query);
+            }
+        }
         cx.notify();
         Task::ready(())
     }
@@ -392,11 +417,12 @@ pub struct PaletteView {
 impl PaletteView {
     /// Build a palette view in Commands mode.
     ///
-    /// `searchable(false)`: the command set is static and a search input
-    /// would add a second Esc consumer competing with the Dialog's
-    /// Esc-to-close. Confirming "Open File..." flips this to searchable
-    /// (see [`Self::on_list_event`]) when the fuzzy search becomes the
-    /// point of interaction.
+    /// `searchable(true)` (Wave 9): the palette opens searchable so the
+    /// user can filter commands by typing immediately — `perform_search`
+    /// filters the Commands list by title substring. Confirming
+    /// "Open File..." keeps the list searchable and re-focuses the search
+    /// input (see [`Self::on_list_event`]) as the fuzzy file search
+    /// becomes the point of interaction.
     ///
     /// `editor` is a weak handle to the editor whose buffer a file open
     /// swaps; it is threaded into the delegate.
@@ -406,7 +432,7 @@ impl PaletteView {
         cx: &mut Context<Self>,
     ) -> Self {
         let state =
-            cx.new(|cx| ListState::new(PaletteDelegate::new(editor), window, cx).searchable(false));
+            cx.new(|cx| ListState::new(PaletteDelegate::new(editor), window, cx).searchable(true));
 
         // Subscribe to the list's events so a Commands-mode confirm that
         // switched to Files mode can flip the list to searchable and

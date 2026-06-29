@@ -12,7 +12,7 @@
 //! explicitly asks for the gpui-side variant of E2E.
 
 use gpui::{AppContext as _, Entity, TestAppContext};
-use gpui_component::{Root, WindowExt as _};
+use gpui_component::{Root, Theme, ThemeMode, WindowExt as _};
 
 use limn_core::block::Block;
 use limn_service::LimnConfig;
@@ -234,4 +234,103 @@ fn toggle_palette_is_a_no_op_while_settings_screen_is_active(cx: &mut TestAppCon
         );
     })
     .expect("post-toggle assertions");
+}
+
+/// Wave 9 (Gap A): the gpui-component `Theme` global must track the saved
+/// config. We install a Light config, prove the global reflects Light,
+/// then save a Dark draft through the settings view and prove the global
+/// flips to Dark — the dynamic-render path the settings `save_to_path`
+/// now drives.
+#[gpui::test]
+fn theme_global_reflects_config_after_toggle(cx: &mut TestAppContext) {
+    let light_config = LimnConfig {
+        font: limn_service::FontConfig {
+            family: String::new(),
+            size: 14,
+        },
+        theme: limn_service::Theme::Light,
+        vault_path: None,
+    };
+    install_globals(cx, light_config);
+
+    // Seed the gpui-component Theme global the way `run_editable` does at
+    // startup, then assert it reflects the Light config.
+    cx.update(|cx| {
+        Theme::change(ThemeMode::Light, None, cx);
+        assert_eq!(Theme::global(cx).mode, ThemeMode::Light);
+    });
+
+    let tmp = tempfile::tempdir().expect("tempdir");
+    let config_path = tmp.path().join("config.toml");
+
+    let window = cx.add_window(SettingsView::new);
+    cx.run_until_parked();
+
+    // Flip the draft to Dark and save through the sync test path, which
+    // (Wave 9) applies the theme to the global via `Theme::change`.
+    window
+        .update(cx, |view, window, cx| {
+            view.set_test_inputs("", "14", "", true, window, cx);
+            let ok = view.save_to_path(&config_path, cx);
+            assert!(ok, "save should succeed");
+        })
+        .expect("update settings view");
+
+    cx.run_until_parked();
+
+    cx.update(|cx| {
+        assert_eq!(
+            Theme::global(cx).mode,
+            ThemeMode::Dark,
+            "Theme global must flip to Dark after saving a Dark draft"
+        );
+    });
+}
+
+/// Wave 9 (Gap B): toggling the palette opens it as a searchable dialog.
+/// We can assert the dialog is open; cursor-in-input focus is not
+/// verifiable under headless gpui (no real event loop / text system), so
+/// this test pins the "opens, and a dialog is active" contract that the
+/// `searchable(true)` change preserves.
+#[gpui::test]
+fn toggle_palette_opens_with_searchable_list(cx: &mut TestAppContext) {
+    let flags = FeatureFlags {
+        palette: true,
+        ..FeatureFlags::default()
+    };
+    cx.update(|cx| {
+        gpui_component::init(cx);
+        cx.set_global(flags);
+        cx.set_global(AppConfig(LimnConfig::default()));
+        limn_ui::actions::bind_keys(cx);
+    });
+
+    let mut shell_entity: Option<Entity<AppShell>> = None;
+    let window = cx.add_window(|window, cx| {
+        let editor = cx.new(|cx| EditorView::new("test.md", None, "hello".to_string(), window, cx));
+        editor.update(cx, |view, cx| view.focus(window, cx));
+        let shell = cx.new(|cx| AppShell::new(editor, window, cx));
+        shell_entity = Some(shell.clone());
+        Root::new(shell, window, cx)
+    });
+    let _shell = shell_entity.expect("shell entity captured during window build");
+
+    cx.run_until_parked();
+
+    // From the editor screen, toggling the palette must open the dialog.
+    cx.dispatch_action(window.into(), TogglePalette);
+    cx.run_until_parked();
+
+    cx.update_window(window.into(), |_, window, cx| {
+        assert!(
+            window.has_active_dialog(cx),
+            "TogglePalette must open the palette dialog on the editor screen"
+        );
+        // Note: the palette list now opens `searchable(true)` (Wave 9), so
+        // a search input is present and the list filters commands as the
+        // user types. Asserting the cursor actually lands in that input is
+        // not possible under headless gpui (no text-input/event loop), so
+        // the assertable contract here is "a dialog is open".
+    })
+    .expect("post-toggle dialog assertion");
 }

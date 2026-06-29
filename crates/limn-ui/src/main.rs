@@ -14,12 +14,12 @@
 use std::path::{Path, PathBuf};
 
 use gpui::{px, size, App, AppContext, Bounds, SharedString, WindowBounds, WindowOptions};
-use gpui_component::Root;
+use gpui_component::{Root, Theme, ThemeMode};
 use gpui_component_assets::Assets;
 use gpui_platform::application;
 
 use limn_core::markdown;
-use limn_service::{Document, LimnConfig, RawDocument, Vault};
+use limn_service::{Document, LimnConfig, RawDocument, Theme as LimnTheme, Vault};
 use limn_ui::{file_title, AppConfig, AppShell, DocumentView, EditorView, FeatureFlags};
 
 const WELCOME_MD: &str = include_str!("welcome.md");
@@ -145,7 +145,25 @@ fn run_editable(flags: FeatureFlags, config: LimnConfig) {
         // Required before using any gpui-component feature.
         gpui_component::init(cx);
         cx.set_global(flags);
-        cx.set_global(AppConfig(config));
+        cx.set_global(AppConfig(config.clone()));
+        // Wave 9: pipe the loaded theme into gpui-component's Theme global.
+        // `window` is not available here (run closure runs before open_window
+        // resolves), so pass None and call refresh_windows() — same pattern the
+        // story crate uses in its theme-switch handler. Font fields are written
+        // AFTER `Theme::change` (which runs `apply_config` and resets them), so
+        // the override wins.
+        let initial_mode = match config.theme {
+            LimnTheme::Dark => ThemeMode::Dark,
+            LimnTheme::Light => ThemeMode::Light,
+        };
+        Theme::change(initial_mode, None, cx);
+        if !config.font.family.is_empty() {
+            Theme::global_mut(cx).font_family = config.font.family.clone().into();
+        }
+        if config.font.size > 0 {
+            Theme::global_mut(cx).font_size = gpui::px(f32::from(config.font.size));
+        }
+        cx.refresh_windows();
         // Register the editable shell's global keybindings (Wave 4).
         limn_ui::actions::bind_keys(cx);
 

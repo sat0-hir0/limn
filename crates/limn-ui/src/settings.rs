@@ -19,7 +19,7 @@
 use std::path::PathBuf;
 
 use gpui::{
-    div, App, AppContext as _, Context, Entity, FocusHandle, Focusable, InteractiveElement,
+    div, px, App, AppContext as _, Context, Entity, FocusHandle, Focusable, InteractiveElement,
     IntoElement, ParentElement, Render, SharedString, Styled, Subscription, Window,
 };
 use gpui_component::{
@@ -27,10 +27,10 @@ use gpui_component::{
     input::{Input, InputEvent, InputState},
     label::Label,
     switch::Switch,
-    ActiveTheme,
+    ActiveTheme, Theme as GpuiTheme, ThemeMode,
 };
 
-use limn_service::{LimnConfig, Theme};
+use limn_service::{LimnConfig, Theme as LimnTheme};
 
 use crate::actions::{CloseSettings, SETTINGS_CONTEXT};
 use crate::AppConfig;
@@ -79,7 +79,7 @@ impl SettingsView {
         let font_size_state = cx.new(|cx| InputState::new(window, cx).default_value(size_init));
         let vault_path_state = cx.new(|cx| InputState::new(window, cx).default_value(vault_init));
 
-        let theme_dark = matches!(current.theme, Theme::Dark);
+        let theme_dark = matches!(current.theme, LimnTheme::Dark);
 
         // Subscribe to each input's Change so the draft mirrors what the
         // user typed. The closures hold the same shape as the editor's
@@ -197,9 +197,9 @@ impl SettingsView {
             Some(PathBuf::from(vault_path))
         };
         self.draft.theme = if theme_dark {
-            Theme::Dark
+            LimnTheme::Dark
         } else {
-            Theme::Light
+            LimnTheme::Light
         };
     }
 
@@ -228,9 +228,9 @@ impl SettingsView {
         };
 
         self.draft.theme = if self.theme_dark {
-            Theme::Dark
+            LimnTheme::Dark
         } else {
-            Theme::Light
+            LimnTheme::Light
         };
 
         Some(self.draft.clone())
@@ -260,8 +260,25 @@ impl SettingsView {
 
         cx.spawn_in(window, async move |this, cx| match write_task.await {
             Ok(()) => {
-                if let Err(e) = cx.update(|_window, cx| {
+                if let Err(e) = cx.update(|window, cx| {
                     cx.set_global(AppConfig(draft.clone()));
+                    // Wave 9: apply the saved theme/font to gpui-component's
+                    // Theme global so the running session re-renders. `window`
+                    // is available here, so pass `Some(window)` to fire
+                    // `window.refresh` inside `Theme::change`. Font fields are
+                    // written AFTER `change` (which runs `apply_config` and
+                    // resets them), so the override wins.
+                    let mode = match draft.theme {
+                        LimnTheme::Dark => ThemeMode::Dark,
+                        LimnTheme::Light => ThemeMode::Light,
+                    };
+                    GpuiTheme::change(mode, Some(window), cx);
+                    if !draft.font.family.is_empty() {
+                        GpuiTheme::global_mut(cx).font_family = draft.font.family.clone().into();
+                    }
+                    if draft.font.size > 0 {
+                        GpuiTheme::global_mut(cx).font_size = px(f32::from(draft.font.size));
+                    }
                 }) {
                     eprintln!("limn-ui: settings save: failed to update global: {e}");
                     return;
@@ -300,6 +317,29 @@ impl SettingsView {
         match draft.save_to(path) {
             Ok(()) => {
                 cx.set_global(AppConfig(draft.clone()));
+                // Wave 9: apply theme/font to the gpui-component Theme global
+                // (sync test path). No `&mut Window` is in scope here, so we
+                // pass `None` to `Theme::change` and drive the redraw with
+                // `cx.refresh_windows()` instead — `Context<Self>` reaches the
+                // `App` API via `Deref`, so refresh IS callable. This keeps the
+                // path semantically equivalent to the async `save()` above,
+                // where `Some(window)` lets `Theme::change` refresh internally.
+                //
+                // Font fields are written AFTER `Theme::change`: `change` runs
+                // `apply_config`, which resets font_family/font_size, so the
+                // override must come last to win.
+                let mode = match draft.theme {
+                    LimnTheme::Dark => ThemeMode::Dark,
+                    LimnTheme::Light => ThemeMode::Light,
+                };
+                GpuiTheme::change(mode, None, cx);
+                if !draft.font.family.is_empty() {
+                    GpuiTheme::global_mut(cx).font_family = draft.font.family.clone().into();
+                }
+                if draft.font.size > 0 {
+                    GpuiTheme::global_mut(cx).font_size = px(f32::from(draft.font.size));
+                }
+                cx.refresh_windows();
                 self.draft = draft;
                 cx.notify();
                 true
@@ -374,8 +414,11 @@ impl Render for SettingsView {
                             .on_click(cx.listener(
                                 |this: &mut Self, checked: &bool, _window, cx| {
                                     this.theme_dark = *checked;
-                                    this.draft.theme =
-                                        if *checked { Theme::Dark } else { Theme::Light };
+                                    this.draft.theme = if *checked {
+                                        LimnTheme::Dark
+                                    } else {
+                                        LimnTheme::Light
+                                    };
                                     cx.notify();
                                 },
                             )),

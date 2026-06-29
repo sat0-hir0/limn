@@ -255,8 +255,8 @@ neutral steps — see `ColorTheme::ink()`.
 Wave 10-B left four hardcoded `rgb(0x...)` literals on the editor canvas
 and the read-only document view. Wave 10-C will replace them with the
 following semantic roles ( accessed via the active `ColorTheme`; the
-exact access path — `cx.global::<ColorTheme>()` vs a per-frame resolve —
-is a Wave 10-D decision ):
+exact access path — `cx.global::<ColorThemeGlobal>().0` vs a per-frame
+resolve — is a Wave 10-D decision ):
 
 | Existing hardcoded | Replace with | Reason |
 |---|---|---|

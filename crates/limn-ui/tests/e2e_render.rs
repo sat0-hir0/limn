@@ -29,9 +29,16 @@ fn document_view_titles_and_blocks_round_trip_through_a_test_window(cx: &mut Tes
         Block::paragraph("It works."),
     ];
 
-    cx.update(|cx| {
-        cx.set_global(ColorThemeGlobal(ColorTheme::paper()));
-    });
+    // Route through `install_globals` for consistency with the other
+    // Wave 8+ tests. We use an explicit Light config so the installed
+    // `ColorThemeGlobal` is `ColorTheme::paper()` ( preserving the
+    // original test's intent — `Theme::default()` is `Dark`, which
+    // would install `ColorTheme::ink()` instead ).
+    let config = LimnConfig {
+        theme: limn_service::Theme::Light,
+        ..LimnConfig::default()
+    };
+    install_globals(cx, &config);
 
     let window = cx.add_window(|_, _cx| DocumentView {
         title: "hello.md".into(),
@@ -355,9 +362,7 @@ fn color_theme_global_reflects_config_at_startup(cx: &mut TestAppContext) {
     install_globals(cx, &config);
     cx.update(|cx| {
         let global = cx.global::<ColorThemeGlobal>();
-        assert_eq!(global.0.surface_app, ColorTheme::paper().surface_app);
-        assert_eq!(global.0.text_body, ColorTheme::paper().text_body);
-        assert_eq!(global.0.editor_text, ColorTheme::paper().editor_text);
+        assert_eq!(global.0, ColorTheme::paper());
     });
 }
 
@@ -372,7 +377,6 @@ fn color_theme_global_dark_config_gives_ink_values(cx: &mut TestAppContext) {
     install_globals(cx, &config);
     cx.update(|cx| {
         let global = cx.global::<ColorThemeGlobal>();
-        assert_eq!(global.0.surface_app, ColorTheme::ink().surface_app);
-        assert_eq!(global.0.editor_text, ColorTheme::ink().editor_text);
+        assert_eq!(global.0, ColorTheme::ink());
     });
 }

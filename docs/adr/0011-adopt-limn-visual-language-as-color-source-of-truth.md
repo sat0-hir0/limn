@@ -165,8 +165,10 @@ or a bespoke wrapper around every render call.
 - **Cognitive load for new contributors.** "Which API do I use to get
   the background color?" now has two answers depending on what's being
   rendered: components ported from gpui-component use `cx.theme()`;
-  Limn-owned views use `cx.global::<ColorTheme>()` ( the global lands
-  in Wave 10-D ). `docs/design/visual-language.md` documents this
+  Limn-owned views use `cx.global::<ColorThemeGlobal>().0` ( landed in
+  Wave 10-C; the type is `ColorThemeGlobal(pub ColorTheme)` in
+  `crates/limn-ui/src/theme.rs` ). `docs/design/visual-language.md`
+  documents this
   split ( see the "Which theme API to call" table in the Editor
   specifics section ), but it is one more rule to learn. Mitigation:
   the table is the single place a new contributor needs to read.
@@ -176,10 +178,15 @@ or a bespoke wrapper around every render call.
 - **No change to `LimnConfig` schema.** `theme = "light" | "dark"`
   remains the user-facing knob; this ADR only changes how the chosen
   value is consumed.
-- **`run_read_only` ( the M1 read-only path ) is unaffected.** It does
-  not initialise gpui-component and currently does not use
-  `ColorTheme`. Wave 10-C will decide whether to migrate it for
-  consistency or leave the read-only path on its existing literals.
+- **`run_read_only` ( the M1 read-only path ) was migrated in Wave
+  10-C:** it now registers
+  `ColorThemeGlobal(ColorTheme::from_config(config.theme))` at startup,
+  so `DocumentView::render` sources its background from
+  `ColorTheme::surface_app` and its text color from
+  `ColorTheme::text_body` — the same theme global pattern used by the
+  editable path. The read-only path has no settings UI, so there is no
+  live switch, but the persisted `LimnConfig.theme` is honored at
+  launch.
 - **`limn-core` and `limn-service` remain gpui-free.** `theme.rs`
   intentionally lives in `limn-ui` because `Rgba` is a gpui type — see
   the relationship-to-other-ADRs section below.

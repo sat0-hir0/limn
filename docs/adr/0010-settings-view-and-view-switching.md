@@ -231,6 +231,27 @@ DocumentView read paths) is now fully unit-tested. The ADR stays
 
 ---
 
+## Addendum ( Wave 11, 2026-06-30 )
+
+Wave 11 removes the explicit Save button and the draft / commit distinction it implied. The Settings view now auto-applies every change, matching the brand voice in `docs/design/visual-language.md` ( "There is no save button. Every change is written to disk, silently." ) and the platform conventions documented by Apple HIG and Microsoft's Windows Settings guidelines.
+
+Apply semantics:
+
+- **Theme switch** ( gpui-component `Switch` ): immediate apply on click. No debounce.
+- **Font family**: 500 ms debounce after the last keystroke, then apply. Any non-empty string is accepted.
+- **Font size**: parsed on every keystroke; if the parse fails or the value is not greater than zero, the field shows a red border ( using `ColorPalette::red_500()` directly per `visual-language.md`'s status-chip guidance ) and the draft retains its last valid value. A successful parse arms a 500 ms debounce and then applies.
+- **Vault path**: the raw string is stored in the draft on every keystroke but no apply is scheduled. On Enter, the path is `stat`'d; if it does not exist, the field shows a red border and no write occurs. An empty path is treated as valid ( `None` ).
+
+Escape and the `← Back to editor` button keep their existing behavior. The action body did not need to change because there is no draft / commit distinction to discard; every change is already on disk by the time the user can close the view.
+
+Pending debounced tasks are owned by the `SettingsView` entity, which is held on `AppShell::settings_cache` for the lifetime of the window. Closing the Settings view does NOT drop the entity, so any in-flight debounce tasks fire to completion ~500 ms after the last keystroke, even if the user has already returned to the editor. No flush-on-close is needed.
+
+The disk-write-before-globals-update property recorded in the Wave 10-D addendum is preserved: `apply_to_disk_and_globals` runs the background `LimnConfig::save_to` first; the three globals ( `AppConfig`, `gpui_component::Theme`, `ColorThemeGlobal` ) update inside the `Ok(())` arm only.
+
+This addendum does NOT change ADR-0007 ( the TOML format and atomic-rename write are unchanged ) and does NOT promote ADR-0010 to Accepted; the structural decisions remain Proposed pending a maintainer review. The change here is the UX layer on top of those decisions.
+
+---
+
 ## Considered Alternatives
 
 ### Alternative A: Add a "mode" flag to `EditorView`

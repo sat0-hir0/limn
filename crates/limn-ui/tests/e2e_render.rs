@@ -129,12 +129,17 @@ fn app_shell_screen_swaps_on_open_and_close_settings_actions(cx: &mut TestAppCon
 }
 
 #[gpui::test]
-fn settings_view_save_writes_disk_and_updates_app_config_global(cx: &mut TestAppContext) {
+fn settings_view_apply_writes_disk_and_updates_app_config_global(cx: &mut TestAppContext) {
     install_globals(cx, &LimnConfig::default());
 
     let tmp = tempfile::tempdir().expect("tempdir");
     let config_path = tmp.path().join("config.toml");
     let vault_path = tmp.path().join("notes");
+    // Wave 11: `save_to_path` now rejects vault paths that do not exist on
+    // disk (matches the production Enter-handler validation). Create the
+    // directory so this happy-path test exercises a path that passes
+    // validation, not the rejection branch the new tests below cover.
+    std::fs::create_dir_all(&vault_path).expect("create vault dir");
 
     // Build a real SettingsView in a window so the InputState entities
     // have a Window to register against.
@@ -531,6 +536,96 @@ fn save_round_trips_both_globals_light_to_dark_to_light(cx: &mut TestAppContext)
             Theme::global(cx).mode,
             ThemeMode::Light,
             "gpui_component::Theme must flip back to Light on Dark→Light",
+        );
+    });
+}
+
+/// Wave 11: invalid font size text must be rejected — neither disk nor
+/// the live `AppConfig` global moves, and the previous valid value (14)
+/// stays in effect. Mirrors the auto-apply path's "last valid value
+/// wins" rule (VS Code pattern) on the sync test surface.
+#[gpui::test]
+fn settings_apply_skips_invalid_font_size_and_preserves_last_valid(cx: &mut TestAppContext) {
+    let temp = tempfile::tempdir().expect("tempdir");
+    let config_path = temp.path().join("config.toml");
+    let initial = LimnConfig {
+        font: limn_service::FontConfig {
+            family: String::new(),
+            size: 14,
+        },
+        theme: limn_service::Theme::Light,
+        vault_path: None,
+    };
+    install_globals(cx, &initial);
+
+    let window = cx.add_window(SettingsView::new);
+    cx.run_until_parked();
+
+    window
+        .update(cx, |view, window, cx| {
+            view.set_test_inputs("", "abc", "", false, window, cx);
+            let ok = view.save_to_path(&config_path, cx);
+            assert!(!ok, "save_to_path must return false on invalid font size");
+        })
+        .expect("update settings view (invalid font size)");
+
+    cx.run_until_parked();
+
+    cx.update(|cx| {
+        let cfg = &cx.global::<AppConfig>().0;
+        assert_eq!(
+            cfg.font.size, 14,
+            "AppConfig.font.size must be unchanged when invalid input was rejected",
+        );
+    });
+}
+
+/// Wave 11: a vault path that does not exist on disk must be rejected
+/// (matches the production Enter-handler validation in
+/// `SettingsView::new`). The previous valid value (`None`) stays in
+/// effect and `AppConfig` is untouched.
+#[gpui::test]
+fn settings_apply_skips_nonexistent_vault_path(cx: &mut TestAppContext) {
+    let temp = tempfile::tempdir().expect("tempdir");
+    let config_path = temp.path().join("config.toml");
+    let initial = LimnConfig {
+        font: limn_service::FontConfig {
+            family: String::new(),
+            size: 14,
+        },
+        theme: limn_service::Theme::Light,
+        vault_path: None,
+    };
+    install_globals(cx, &initial);
+
+    let window = cx.add_window(SettingsView::new);
+    cx.run_until_parked();
+
+    window
+        .update(cx, |view, window, cx| {
+            view.set_test_inputs(
+                "",
+                "14",
+                "C:/nonexistent/path/that/should/not/exist/12345",
+                false,
+                window,
+                cx,
+            );
+            let ok = view.save_to_path(&config_path, cx);
+            assert!(
+                !ok,
+                "save_to_path must return false on nonexistent vault path",
+            );
+        })
+        .expect("update settings view (nonexistent vault)");
+
+    cx.run_until_parked();
+
+    cx.update(|cx| {
+        let cfg = &cx.global::<AppConfig>().0;
+        assert!(
+            cfg.vault_path.is_none(),
+            "AppConfig.vault_path must remain None when invalid input was rejected",
         );
     });
 }

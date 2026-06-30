@@ -167,7 +167,7 @@ Aligning issue titles with Conventional Commits types makes it easier to link th
 
 - `[bug] window fails to open on Wayland when GPU is absent`
 - `[feat] add slash palette to limn-ui`
-- `[docs] clarify M1 build instructions for Windows`
+- `[docs] clarify build instructions for Windows`
 
 ## Design documents
 

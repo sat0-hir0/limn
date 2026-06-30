@@ -7,7 +7,8 @@ the same PR.
 
 | Flag | Env var | Stage | Added | Owner | Notes |
 |---|---|---|---|---|---|
-| `edit` | `LIMN_FEAT_EDIT` | 1: hidden | M2 (Issue #3) | sat0-hir0 | Editable editor backed by `gpui-component` `InputState` (ADR-0005). Wave 1: input / cursor / selection / delete / copy-cut-paste / undo-redo / IME. Autosave is a later wave. Wave 8 adds the `AppShell` + `SettingsView` view-switching under this same flag (ADR-0010). |
+| `edit` | `LIMN_FEAT_EDIT` | 1: hidden | Issue #3 | sat0-hir0 | Editable editor backed by `gpui-component` `InputState` (ADR-0005). Covers input / cursor / selection / delete / copy-cut-paste / undo-redo / IME, debounced autosave, the `AppShell` + `SettingsView` view-switching (ADR-0010), and the `ColorThemeGlobal` reactive-theme path (ADR-0011). |
+| `palette` | `LIMN_FEAT_PALETTE` | 1: hidden | Issue #3 | sat0-hir0 | Command palette (`Ctrl+Shift+P`) with `Open File…` fuzzy search (ADR-0009) and `Open Settings`. Registered via gpui actions on the editable shell's focus chain (ADR-0008). |
 
 ## Stage reference
 

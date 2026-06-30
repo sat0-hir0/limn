@@ -3,19 +3,19 @@
 //! The round-trip property of this module is the project's "lifeline"
 //! (see `docs/design/testing-strategy.md` §4).
 //!
-//! M1 ships a deliberately small line-oriented parser: `#`/`##`/`###`
+//! Currently a deliberately small line-oriented parser: `#`/`##`/`###`
 //! lines become Headings, every other non-empty line becomes a
-//! Paragraph, blank lines are skipped. `serialize()` is still stubbed
-//! and will land alongside the real parser in M2.
+//! Paragraph, blank lines are skipped. `serialize()` is still a
+//! placeholder (not yet implemented).
 
 use crate::block::Block;
 
 /// Parse a Markdown string into a flat list of blocks.
 ///
-/// This is the M1 toy parser. It only understands ATX-style headings
-/// (`#` … `######`) and treats every other non-empty line as a
-/// paragraph; consecutive non-blank lines do not merge. M2 will
-/// replace this with a real CommonMark-aware parser.
+/// This is the current toy parser. It only understands ATX-style
+/// headings (`#` … `######`) and treats every other non-empty line as
+/// a paragraph; consecutive non-blank lines do not merge. A real
+/// CommonMark-aware parser is not yet wired.
 #[must_use]
 pub fn parse(md: &str) -> Vec<Block> {
     let mut blocks = Vec::new();
@@ -33,14 +33,14 @@ pub fn parse(md: &str) -> Vec<Block> {
     blocks
 }
 
-/// Serialize blocks back to Markdown. **Not implemented in M1.**
+/// Serialize blocks back to Markdown. **Not yet implemented.**
 ///
 /// # Panics
 ///
-/// Always panics — the implementation lands in M2.
+/// Always panics — the implementation is not yet wired.
 #[must_use]
 pub fn serialize(_blocks: &[Block]) -> String {
-    unimplemented!("serialize: lands in M2 together with the real parser") // limn:allow-panic: M2 placeholder
+    unimplemented!("serialize: not yet implemented") // limn:allow-panic: placeholder until the real parser is wired
 }
 
 /// Returns `(level, text)` if `line` is an ATX heading, else `None`.
@@ -70,10 +70,10 @@ mod tests {
     use crate::block::BlockKind;
 
     /// Round-trip: parse → serialize keeps the input intact (whitespace
-    /// normalisation is allowed). Stays ignored until M2 ships
-    /// `serialize`.
+    /// normalisation is allowed). Stays ignored until `serialize` is
+    /// implemented.
     #[test]
-    #[ignore = "M2: serialize() not yet implemented"]
+    #[ignore = "serialize() not yet implemented"]
     fn roundtrip_preserves_input() {
         // intentionally empty
     }

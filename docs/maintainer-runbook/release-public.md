@@ -10,7 +10,7 @@ Each step is written to be re-runnable independently.
   time of release.
 - Tag v0.1.0 and create a GitHub Release.
 - Switch the repo from `private` to `public`.
-- The product scope is M1 (read-only `.md` rendering). Feature
+- The product scope at v0.1.0 is read-only `.md` rendering. Feature
   completeness is not a precondition for going public.
 - Known limitations (GPL contamination) are already honestly disclosed
   in `README.md` under "Known limitations" and in a GitHub Issue.
@@ -138,8 +138,6 @@ of .md files. This v0.1.0 publishes the operational foundation:
   CONTRIBUTING, SECURITY, issue/PR templates, label policy.
 - Quality gates: cargo-deny, gitleaks, release-please, debt-scan,
   lefthook hooks.
-
-Editing (M2) and the slash-palette (M3) land on top of this base.
 
 Known limitations are documented in README and tracked in GitHub
 Issues (notably the gpui-transitive GPL contamination, awaiting

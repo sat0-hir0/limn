@@ -39,8 +39,9 @@ pub fn file_title(path: &Path) -> SharedString {
         .into()
 }
 
-/// Read-only view of a parsed Markdown document. M1's only view; M2
-/// will introduce an editing-capable variant.
+/// Read-only view of a parsed Markdown document. Renders each block as
+/// a row. The editable counterpart is [`EditorView`] (gated behind the
+/// `edit` flag).
 pub struct DocumentView {
     pub title: SharedString,
     pub blocks: Vec<Block>,

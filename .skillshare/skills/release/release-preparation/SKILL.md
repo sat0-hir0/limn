@@ -8,7 +8,6 @@ description: Inspect the release-please PR before merging — verify CHANGELOG a
 ## Use when
 
 - release-please opens or updates the `chore: release v0.X.Y` PR.
-- A milestone version is being cut.
 
 ## Contract
 

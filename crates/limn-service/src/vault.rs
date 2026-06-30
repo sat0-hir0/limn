@@ -1,7 +1,8 @@
 //! Vault: I/O against a folder full of `.md` files.
 //!
-//! M1 adds the read path: open a directory, find a Markdown file, and
-//! hand it to `limn_core::markdown::parse`. The write path lands in M2.
+//! Currently provides the read path: open a directory, find a Markdown
+//! file, and hand it to `limn_core::markdown::parse`. The write path is
+//! not yet implemented.
 
 use std::fs;
 use std::io;
@@ -128,7 +129,7 @@ impl Vault {
     /// alphabetical order, parse it, and return the [`Document`].
     ///
     /// Subdirectories are not searched — keep the surface small until
-    /// M3 needs a real walk.
+    /// a real walk is required.
     ///
     /// # Errors
     ///

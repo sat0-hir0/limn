@@ -1,6 +1,6 @@
-//! Block tree primitives. M1 introduces a Heading variant alongside
-//! the original Paragraph; richer block types (lists, code, tables,
-//! images) come in later milestones.
+//! Block tree primitives. Currently supports Heading and Paragraph;
+//! richer block types (lists, code, tables, images) are not yet
+//! implemented.
 
 /// What kind of block a node is. Keep this enum small — every variant
 /// pays for itself in the renderer and the parser.

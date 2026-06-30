@@ -52,8 +52,9 @@ Concretely:
 - We disclose in the "Known limitations" section of `README.md` that `zlog`
   (GPL-3.0-or-later) is included in binary distributions.
 - We open a tracking issue on GitHub and link it to the upstream issue.
-- We revisit this decision at milestone M5 (AI integration complete). Until
-  then we take no alternative action.
+- We revisit this decision when any of the triggers in the
+  "Reassessment trigger" section below fire. Until then we take no
+  alternative action.
 
 Rationale:
 
@@ -80,7 +81,8 @@ Rationale:
   satisfying GPL-3.0 copyleft conditions (source disclosure, licence notices,
   etc.)
 - **Upstream fix timeline is uncertain** — it is unknown when
-  zed-industries/zed#55470 will be resolved; it may still be open after M5
+  zed-industries/zed#55470 will be resolved, and it may remain open
+  for an extended period
 - **Risk of user confusion** — the repository states "Apache-2.0" but GPL
   conditions effectively apply; users knowledgeable about licences may find
   this confusing
@@ -119,19 +121,33 @@ Rationale:
   b-4) considered in `gpui-gpl-fix-path-b.md`.
 - **Reason for rejection**: `sum_tree` is a core data structure of gpui, making
   implementation and maintenance costs high. With an upstream fix anticipated,
-  the priority for implementing this in advance is low. If the issue remains
-  unresolved at the M5 review, this option will be reconsidered.
+  the priority for implementing this in advance is low. If the triggers in
+  the "Reassessment trigger" section fire without an upstream fix in place,
+  this option will be reconsidered.
 
 ---
 
 ## Reassessment trigger
 
-At milestone M5 (AI integration complete), we will check:
+This decision is reassessed when any of the following conditions hold,
+not on a fixed schedule:
 
-1. Whether [zed-industries/zed#55470](https://github.com/zed-industries/zed/issues/55470) has been resolved.
-2. If not resolved: re-evaluate demand for binary distribution and the cost of
-   alternative implementations.
-3. If resolved: update `Cargo.lock` to eliminate the contamination.
+1. [zed-industries/zed#55470](https://github.com/zed-industries/zed/issues/55470)
+   is resolved upstream. Action: update `Cargo.lock` to eliminate the
+   contamination.
+2. Demand for binary distribution of Limn emerges while the upstream
+   issue is still open (e.g. release artifacts, installers, packaged
+   builds for end users). Action: re-evaluate the cost of alternative
+   implementations against the cost of complying with GPL-3.0
+   conditions on those binaries.
+3. The `sum_tree` / `ztracing` / `zlog` dependency surface is
+   restructured upstream (for example, `sum_tree` no longer depends on
+   `ztracing`, or `zlog` is split out) such that the contamination can
+   be avoided with a `Cargo.toml` change rather than a fork. Action:
+   adopt the new dependency shape.
+4. A licence audit, downstream redistribution request, or security
+   review surfaces a concrete user impact from the contamination.
+   Action: prioritise mitigation in proportion to the impact.
 
 ---
 

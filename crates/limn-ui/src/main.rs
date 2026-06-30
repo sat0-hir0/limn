@@ -5,11 +5,11 @@
 //! - Default (read-only): renders each parsed block as a row. With no
 //!   argument it shows the embedded Welcome document; with a path it
 //!   loads that `.md` via `limn-service`.
-//! - `LIMN_FEAT_EDIT=1` (M2, hidden flag): opens an editable view backed
+//! - `LIMN_FEAT_EDIT=1` (hidden flag): opens an editable view backed
 //!   by `gpui-component`'s `InputState`, seeded with the file's raw
 //!   text. Input, cursor, selection, delete, copy/cut/paste, undo/redo,
-//!   and IME come from the component (see ADR-0005). Autosave is a later
-//!   wave.
+//!   IME, and autosave (debounced raw-text write) come from this path;
+//!   see ADR-0005.
 
 use std::path::{Path, PathBuf};
 

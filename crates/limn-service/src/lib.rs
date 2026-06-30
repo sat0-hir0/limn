@@ -5,7 +5,6 @@
 //! - [`config`]: user configuration (`~/.config/limn/config.toml`)
 //!
 //! Never block the main thread (see ARCHITECTURE.md "Thread model").
-//! Asynchronous runtimes like `tokio` will be introduced in M2 and beyond.
 
 pub mod config;
 pub mod index;

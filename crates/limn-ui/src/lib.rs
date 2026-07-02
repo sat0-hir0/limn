@@ -10,6 +10,10 @@ use gpui::{
 use limn_core::block::{Block, BlockKind};
 use limn_service::{Config, Theme};
 
+pub mod settings;
+
+pub use settings::{SaveStatus, SettingsView};
+
 /// Read-only view of a parsed Markdown document. Currently the only
 /// view; an editing-capable variant is not yet provided.
 pub struct DocumentView {

@@ -15,6 +15,7 @@
 use gpui::TestAppContext;
 
 use limn_core::block::Block;
+use limn_service::{Config, Theme};
 use limn_ui::DocumentView;
 
 #[gpui::test]
@@ -27,6 +28,7 @@ fn document_view_titles_and_blocks_round_trip_through_a_test_window(cx: &mut Tes
     let window = cx.add_window(|_, _cx| DocumentView {
         title: "hello.md".into(),
         blocks: blocks.clone(),
+        config: Config::default(),
     });
 
     cx.run_until_parked();
@@ -40,6 +42,35 @@ fn document_view_titles_and_blocks_round_trip_through_a_test_window(cx: &mut Tes
         .update(cx, |view, _window, _cx| {
             assert_eq!(view.title.as_ref(), "hello.md");
             assert_eq!(view.blocks, blocks);
+        })
+        .expect("window update should succeed");
+}
+
+#[gpui::test]
+fn document_view_renders_with_a_dark_theme_config(cx: &mut TestAppContext) {
+    let blocks = vec![Block::paragraph("Dark mode.")];
+    let config = Config {
+        theme: Theme::Dark,
+        ..Default::default()
+    };
+
+    let window = cx.add_window(|_, _cx| DocumentView {
+        title: "dark.md".into(),
+        blocks: blocks.clone(),
+        config: config.clone(),
+    });
+
+    cx.run_until_parked();
+
+    // The dark-theme config survives construction and the run loop
+    // renders a frame without panicking (render() branches on
+    // `config.theme` to pick colours). gpui exposes no public handle to
+    // the resolved pixels at this rev, so the view's own config is the
+    // contract we can assert.
+    window
+        .update(cx, |view, _window, _cx| {
+            assert_eq!(view.config.theme, Theme::Dark);
+            assert_eq!(view.config, config);
         })
         .expect("window update should succeed");
 }

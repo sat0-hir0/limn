@@ -12,7 +12,7 @@ use gpui::{px, size, App, AppContext, Bounds, SharedString, WindowBounds, Window
 use gpui_platform::application;
 
 use limn_core::markdown;
-use limn_service::{Document, Vault};
+use limn_service::{Config, Document, Vault};
 use limn_ui::DocumentView;
 
 const WELCOME_MD: &str = include_str!("welcome.md");
@@ -31,6 +31,14 @@ fn main() {
             }
         }
         None => welcome_document(),
+    };
+
+    let config = match Config::load() {
+        Ok(c) => c,
+        Err(e) => {
+            eprintln!("limn-ui: failed to load config, using defaults: {e}");
+            Config::default()
+        }
     };
 
     let title: SharedString = document
@@ -52,6 +60,7 @@ fn main() {
                 cx.new(|_| DocumentView {
                     title: title.clone(),
                     blocks: blocks.clone(),
+                    config: config.clone(),
                 })
             },
         )

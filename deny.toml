@@ -18,6 +18,8 @@ allow = [
     "Apache-2.0 WITH LLVM-exception",
     "NCSA",
     "bzip2-1.0.6",
+    # enum-iterator / enum-iterator-derive (gpui-component transitive).
+    "0BSD",
     # Awaiting upstream — see https://github.com/sat0-hir0/limn/issues/4.
     # zlog / ztracing / ztracing_macro ship from the Zed monorepo under
     # GPL-3.0-or-later and get pulled in transitively by sum_tree → gpui.
@@ -52,6 +54,7 @@ ignore = [
     "RUSTSEC-2024-0436", # paste (transitive via gpui)
     "RUSTSEC-2025-0052", # async-std (transitive via gpui)
     "RUSTSEC-2026-0173", # proc-macro-error2 (transitive via gpui)
+    "RUSTSEC-2025-0134", # rustls-pemfile unmaintained (transitive via gpui-component-assets -> zed-reqwest)
 ]
 
 [sources]
@@ -66,4 +69,6 @@ allow-git = [
     "https://github.com/zed-industries/font-kit",
     "https://github.com/zed-industries/xim-rs.git",
     "https://github.com/proptest-rs/proptest",
+    # zed-reqwest, pulled in by gpui-component-assets.
+    "https://github.com/zed-industries/reqwest.git",
 ]

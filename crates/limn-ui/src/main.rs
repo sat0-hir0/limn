@@ -13,7 +13,7 @@ use gpui_platform::application;
 
 use limn_core::markdown;
 use limn_service::{Document, Vault};
-use limn_ui::EditorView;
+use limn_ui::{DocumentView, EditorView, FeatureFlags};
 
 const WELCOME_MD: &str = include_str!("welcome.md");
 const WELCOME_TITLE: &str = "Welcome";
@@ -40,6 +40,8 @@ fn main() {
         .map_or_else(|| "(unnamed)".to_string(), String::from)
         .into();
     let text = document.text;
+    let blocks = document.blocks;
+    let flags = FeatureFlags::from_env();
 
     application().run(move |cx: &mut App| {
         gpui_component::init(cx);
@@ -51,8 +53,17 @@ fn main() {
                 ..Default::default()
             },
             |window, cx| {
-                let view = cx.new(|cx| EditorView::new(title.clone(), text.clone(), window, cx));
-                cx.new(|cx| Root::new(view, window, cx))
+                if flags.edit {
+                    let view =
+                        cx.new(|cx| EditorView::new(title.clone(), text.clone(), window, cx));
+                    cx.new(|cx| Root::new(view, window, cx))
+                } else {
+                    let view = cx.new(|_cx| DocumentView {
+                        title: title.clone(),
+                        blocks: blocks.clone(),
+                    });
+                    cx.new(|cx| Root::new(view, window, cx))
+                }
             },
         )
         .expect("opening the main window should succeed"); // limn:allow-panic: window creation failure is unrecoverable at startup

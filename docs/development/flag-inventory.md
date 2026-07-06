@@ -7,7 +7,7 @@ the same PR.
 
 | Flag | Env var | Stage | Added | Owner | Notes |
 |---|---|---|---|---|---|
-| (none) | — | — | — | — | No flags at v0.1.0. |
+| `edit` | `LIMN_FEAT_EDIT` | 1 (hidden) | 2026-07-07 | sat0-hir0 | Gates `EditorView`. Off shows the read-only `DocumentView`; on shows the editable view. |
 
 ## Stage reference
 

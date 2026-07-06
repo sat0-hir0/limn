@@ -11,6 +11,10 @@ use gpui_component::input::{Input, InputEvent, InputState};
 
 use limn_core::block::{Block, BlockKind};
 
+pub mod feature_flags;
+
+pub use feature_flags::FeatureFlags;
+
 /// Read-only view of a parsed Markdown document.
 pub struct DocumentView {
     pub title: SharedString,

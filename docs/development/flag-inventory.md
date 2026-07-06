@@ -7,7 +7,7 @@ the same PR.
 
 | Flag | Env var | Stage | Added | Owner | Notes |
 |---|---|---|---|---|---|
-| `edit` | `LIMN_FEAT_EDIT` | 1 (hidden) | 2026-07-07 | sat0-hir0 | Gates `EditorView`. Off shows the read-only `DocumentView`; on shows the editable view. |
+| `edit` | `LIMN_FEAT_EDIT` | 1 (hidden) | 2026-07-07 | sat0-hir0 | Gates `EditorView`. Off shows the read-only `DocumentView`; on shows the editable view. See [ADR-0005](../adr/0005-separate-view-for-editing.md). |
 
 ## Stage reference
 

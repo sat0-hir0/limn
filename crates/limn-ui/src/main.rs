@@ -1,19 +1,19 @@
 //! Limn UI bin.
 //!
-//! Boots a gpui application, opens a single window, and renders each
-//! block as a row. With no argument it shows the embedded Welcome
-//! document (VS Code's welcome tab equivalent); with a path it loads
-//! that `.md` via `limn-service`. Read-only; editing is not yet
-//! implemented.
+//! Boots a gpui application, opens a single window, and shows an
+//! editable view of the document. With no argument it shows the
+//! embedded Welcome document (VS Code's welcome tab equivalent); with
+//! a path it loads that `.md` via `limn-service`.
 
 use std::path::{Path, PathBuf};
 
 use gpui::{px, size, App, AppContext, Bounds, SharedString, WindowBounds, WindowOptions};
+use gpui_component::Root;
 use gpui_platform::application;
 
 use limn_core::markdown;
 use limn_service::{Document, Vault};
-use limn_ui::DocumentView;
+use limn_ui::EditorView;
 
 const WELCOME_MD: &str = include_str!("welcome.md");
 const WELCOME_TITLE: &str = "Welcome";
@@ -39,20 +39,20 @@ fn main() {
         .and_then(|n| n.to_str())
         .map_or_else(|| "(unnamed)".to_string(), String::from)
         .into();
-    let blocks = document.blocks;
+    let text = document.text;
 
     application().run(move |cx: &mut App| {
+        gpui_component::init(cx);
+
         let bounds = Bounds::centered(None, size(px(900.0), px(700.0)), cx);
         cx.open_window(
             WindowOptions {
                 window_bounds: Some(WindowBounds::Windowed(bounds)),
                 ..Default::default()
             },
-            |_, cx| {
-                cx.new(|_| DocumentView {
-                    title: title.clone(),
-                    blocks: blocks.clone(),
-                })
+            |window, cx| {
+                let view = cx.new(|cx| EditorView::new(title.clone(), text.clone(), window, cx));
+                cx.new(|cx| Root::new(view, window, cx))
             },
         )
         .expect("opening the main window should succeed"); // limn:allow-panic: window creation failure is unrecoverable at startup
@@ -76,5 +76,6 @@ fn welcome_document() -> Document {
     Document {
         path: PathBuf::from(WELCOME_TITLE),
         blocks: markdown::parse(&body),
+        text: body,
     }
 }

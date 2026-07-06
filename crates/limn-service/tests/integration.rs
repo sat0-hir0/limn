@@ -76,6 +76,7 @@ fn given_a_specific_path_when_open_path_then_document_is_returned() {
     let document = Vault::open_path(&path).unwrap();
 
     assert_eq!(document.path, path);
+    assert_eq!(document.text, "## Heading 2\n\nbody\n");
     assert!(matches!(
         document.blocks[0].kind,
         BlockKind::Heading { level: 2 }

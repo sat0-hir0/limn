@@ -55,6 +55,7 @@ pub struct EditorView {
 }
 
 impl EditorView {
+    #[must_use]
     pub fn new(
         title: SharedString,
         initial_text: String,

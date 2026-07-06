@@ -39,15 +39,14 @@ cargo run -p debt-scan -- gate --update-baseline   # accept new baseline
 
 ### Baseline at a glance
 
-The current baseline reflects the v0.1.0 public release. Verify against
-[`baseline.json`](baseline.json) — that file is the source of truth;
-the table here is just for humans.
+Verify against [`baseline.json`](baseline.json) — that file is the
+source of truth; the table here is just for humans.
 
 | Category                | Baseline | Notes                                                                     |
 | ----------------------- | -------: | ------------------------------------------------------------------------- |
-| `rust-loc`              |      662 | Covers the parser, vault, gpui shell, and the integration + E2E tests shipped in v0.1.0. |
-| `external-deps`         |        4 | `gpui` and `gpui_platform` (runtime), `tempfile` and the gpui `test-support` activation (dev-deps). |
-| `todo-fixme`            |        0 |                                                                            |
+| `rust-loc`              |     1460 | Covers the parser, vault, gpui shell, `EditorView`/`FeatureFlags`, and the integration + E2E tests. |
+| `external-deps`         |        5 | `gpui` and `gpui_platform` (runtime), `gpui-component` (runtime, `limn-ui`'s `EditorView`), `tempfile` and the gpui `test-support` activation (dev-deps). |
+| `todo-fixme`            |        1 | `crates/debt-scan/src/scanner.rs`'s own marker definitions and test fixture strings, not debt in the scanned crates. |
 | `allow-dead-code`       |        0 |                                                                            |
 | `ignored-tests`         |        5 | Markdown round-trip scaffold from `tests/roundtrip.rs`; the `serialize` path is not yet implemented. |
 | `unsafe-blocks`         |        0 | `unsafe_code = "forbid"` is workspace-wide.                                |
@@ -59,10 +58,16 @@ meaningful.
 
 ## Open debt
 
-No entries.
+### `external-deps` baseline raised to 5 (`gpui-component`)
 
-The repo currently stays close to the trunk. Self-contained debt
-items land here as they are introduced.
+- **Source**: Issue #72 (`crates/limn-ui/src/lib.rs`, `EditorView`).
+- **What**: Added `gpui-component` as a runtime dependency of
+  `limn-ui`. `EditorView` uses its `InputState` for text entry, IME,
+  cursor movement, selection, clipboard, and undo/redo (see
+  [ADR-0001](../adr/0001-adopt-gpui.md), [ADR-0005](../adr/0005-separate-view-for-editing.md)).
+  `external-deps` moved from 4 to 5 in `baseline.json`.
+- **Resolution condition**: None. `gpui-component` is a permanent
+  dependency of the editing feature, not a shortcut to unwind.
 
 Note: licence / upstream issues that need outside action are tracked as
 GitHub Issues (`wontfix` label) rather than dashboard entries, since

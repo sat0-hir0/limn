@@ -76,6 +76,28 @@ fn settings_escape_returns_to_the_editor(cx: &mut TestAppContext) {
 }
 
 #[gpui::test]
+fn settings_ctrl_shift_p_shows_the_palette(cx: &mut TestAppContext) {
+    let window = open_shell(cx);
+    cx.simulate_keystrokes(window.into(), "ctrl-,");
+    assert_view(&window, cx, ShellView::Settings);
+
+    cx.simulate_keystrokes(window.into(), "ctrl-shift-p");
+
+    assert_view(&window, cx, ShellView::Palette);
+}
+
+#[gpui::test]
+fn palette_ctrl_comma_shows_settings(cx: &mut TestAppContext) {
+    let window = open_shell(cx);
+    cx.simulate_keystrokes(window.into(), "ctrl-shift-p");
+    assert_view(&window, cx, ShellView::Palette);
+
+    cx.simulate_keystrokes(window.into(), "ctrl-,");
+
+    assert_view(&window, cx, ShellView::Settings);
+}
+
+#[gpui::test]
 fn editor_escape_is_idempotent(cx: &mut TestAppContext) {
     let window = open_shell(cx);
 

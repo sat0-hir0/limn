@@ -24,6 +24,7 @@
   - [ADR-0002: Three-crate Layered Architecture](adr/0002-three-crate-layered-architecture.md)
   - [ADR-0003: Temporarily Accept GPL Contamination](adr/0003-temporarily-accept-gpl-contamination.md)
   - [ADR-0004: Scope `.skillshare/` skills to OSS operating procedures](adr/0004-scope-skillshare-to-oss-operations.md)
+  - [ADR-0005: Own View Switching in a Shell Root View](adr/0005-own-view-switching-in-a-shell-root-view.md)
 
 ---
 

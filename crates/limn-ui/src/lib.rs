@@ -2,10 +2,16 @@
 //!
 //! Splitting this out of `main.rs` lets tests construct `DocumentView`
 //! directly via `TestAppContext`.
+//!
+//! - [`palette`]: command palette state (no gpui types)
+//! - [`workspace`]: the window's root view, hosting the palette overlay
 
 use gpui::{div, rgb, Context, IntoElement, ParentElement, Render, SharedString, Styled, Window};
 
 use limn_core::block::{Block, BlockKind};
+
+pub mod palette;
+pub mod workspace;
 
 /// Read-only view of a parsed Markdown document. Currently the only
 /// view; an editing-capable variant is not yet provided.

@@ -125,6 +125,7 @@ limn-service/
 
 - **Editor view** — Renders the block tree via gpui. Handles cursor, selection, and scrolling.
 - **`/` command palette** — Block insertion and transformation commands opened with a slash.
+- **`Ctrl+Shift+P` command palette** — App-level commands and fuzzy search over the vault's `.md` files (no separate file-browser view). State lives in `palette.rs` without gpui types; `workspace.rs` hosts it as an overlay.
 - **AI UI** — Text selection → shortcut → AI call → diff insertion.
 - **Graph view** — Visualization of link relationships (automatic layout).
 - **Focus mode** — Highlights the current point; dims everything else.
@@ -140,6 +141,8 @@ limn-ui/
     main.rs         # entry point / gpui app initialization
     editor/         # editor view
     palette/        # / command palette
+    palette.rs      # Ctrl+Shift+P palette state (commands, file search)
+    workspace.rs    # window root view hosting the Ctrl+Shift+P palette
     graph/          # graph view
     lib.rs
 ```

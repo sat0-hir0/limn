@@ -64,9 +64,8 @@ fn main() {
         let renderer = args.get(2).map_or("", String::as_str);
         if renderer == "html" {
             process::exit(0);
-        } else {
-            process::exit(1);
         }
+        process::exit(1);
     }
 
     // Normal preprocessor invocation: read JSON from stdin, validate, write back.

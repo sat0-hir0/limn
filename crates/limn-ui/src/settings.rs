@@ -45,6 +45,9 @@ pub struct SettingsView {
     pub config: Config,
     /// Result of the most recent Save.
     pub status: SaveStatus,
+    /// The config as last written by a successful Save, if any. The
+    /// shell hands this to the document view on switching back.
+    pub last_saved: Option<Config>,
 }
 
 impl SettingsView {
@@ -54,6 +57,7 @@ impl SettingsView {
         Self {
             config,
             status: SaveStatus::Idle,
+            last_saved: None,
         }
     }
 
@@ -76,7 +80,10 @@ impl SettingsView {
     /// panicking, so the view can display it.
     pub fn save(&mut self) {
         self.status = match self.config.save() {
-            Ok(()) => SaveStatus::Saved,
+            Ok(()) => {
+                self.last_saved = Some(self.config.clone());
+                SaveStatus::Saved
+            }
             Err(e) => SaveStatus::Error(e.to_string().into()),
         };
     }

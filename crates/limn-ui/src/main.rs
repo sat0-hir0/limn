@@ -1,10 +1,11 @@
 //! Limn UI bin.
 //!
-//! Boots a gpui application, opens a single window, and renders one of
-//! two views. With `--settings` it opens the editable Settings view;
-//! otherwise it renders a document — the embedded Welcome document
-//! (VS Code's welcome tab equivalent) with no path, or the `.md` at the
-//! given path via `limn-service`. The document view is read-only;
+//! Boots a gpui application and opens a single window whose root
+//! [`Shell`] switches between two views: a document — the embedded
+//! Welcome document (VS Code's welcome tab equivalent) with no path, or
+//! the `.md` at the given path via `limn-service` — and the editable
+//! Settings view. The window starts on the document; `--settings`
+//! starts it on Settings instead. The document view is read-only;
 //! editing lives in the Settings view.
 
 use std::path::{Path, PathBuf};
@@ -14,9 +15,9 @@ use gpui_platform::application;
 
 use limn_core::markdown;
 use limn_service::{Config, Document, Vault};
-use limn_ui::{DocumentView, SettingsView};
+use limn_ui::{ActiveView, DocumentView, Shell};
 
-/// CLI flag that opens the Settings view instead of a document.
+/// CLI flag that starts the window on the Settings view.
 const SETTINGS_FLAG: &str = "--settings";
 
 const WELCOME_MD: &str = include_str!("welcome.md");
@@ -31,27 +32,17 @@ fn main() {
         }
     };
 
-    // `--settings` selects the Settings view; any other first argument
-    // is treated as a document path (per ADR-0005: Settings is a
-    // separate switchable view opened via a launch flag).
+    // `--settings` picks the starting view; the first other argument is
+    // treated as a document path. Either way the user can switch views
+    // from the top bar (ADR-0005: Settings is a separate switchable view).
     let args: Vec<String> = std::env::args().skip(1).collect();
-    if args.iter().any(|a| a == SETTINGS_FLAG) {
-        run_settings(config);
+    let active = if args.iter().any(|a| a == SETTINGS_FLAG) {
+        ActiveView::Settings
     } else {
-        run_document(config, args.into_iter().next());
-    }
-}
+        ActiveView::Document
+    };
+    let path = args.into_iter().find(|a| a != SETTINGS_FLAG);
 
-/// Open the editable Settings view over a working copy of `config`.
-fn run_settings(config: Config) {
-    application().run(move |cx: &mut App| {
-        open_window(cx, |_, cx| cx.new(|_| SettingsView::new(config.clone())));
-    });
-}
-
-/// Open the read-only document view. With a `path` load that `.md`;
-/// without one show the embedded Welcome document.
-fn run_document(config: Config, path: Option<String>) {
     let document = match path {
         Some(arg) => {
             let path = PathBuf::from(arg);
@@ -76,10 +67,16 @@ fn run_document(config: Config, path: Option<String>) {
 
     application().run(move |cx: &mut App| {
         open_window(cx, |_, cx| {
-            cx.new(|_| DocumentView {
-                title: title.clone(),
-                blocks: blocks.clone(),
-                config: config.clone(),
+            cx.new(|cx| {
+                Shell::new(
+                    DocumentView {
+                        title: title.clone(),
+                        blocks: blocks.clone(),
+                        config: config.clone(),
+                    },
+                    active,
+                    cx,
+                )
             })
         });
     });

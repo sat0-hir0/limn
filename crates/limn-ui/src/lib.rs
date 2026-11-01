@@ -11,11 +11,14 @@ use limn_core::block::{Block, BlockKind};
 use limn_service::{Config, Theme};
 
 pub mod settings;
+pub mod shell;
 
 pub use settings::{SaveStatus, SettingsView};
+pub use shell::{ActiveView, Shell};
 
-/// Read-only view of a parsed Markdown document. Currently the only
-/// view; an editing-capable variant is not yet provided.
+/// Read-only view of a parsed Markdown document. An editing-capable
+/// variant is not yet provided; the [`Shell`] switches between this view
+/// and Settings.
 pub struct DocumentView {
     pub title: SharedString,
     pub blocks: Vec<Block>,

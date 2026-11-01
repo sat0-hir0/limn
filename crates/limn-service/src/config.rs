@@ -171,6 +171,10 @@ impl Config {
     /// Save settings to an explicit path, creating parent directories as
     /// needed.
     ///
+    /// The write is atomic: the TOML goes to a sibling temp file first
+    /// and is then renamed over `path`, so an interrupted Save leaves
+    /// the previous config intact rather than a truncated file.
+    ///
     /// # Errors
     ///
     /// Returns [`ConfigError::Serialize`] if the config cannot be
@@ -180,9 +184,22 @@ impl Config {
             fs::create_dir_all(parent)?;
         }
         let text = toml::to_string_pretty(self)?;
-        fs::write(path, text)?;
+        let tmp = temp_path_for(path);
+        if let Err(e) = fs::write(&tmp, text).and_then(|()| fs::rename(&tmp, path)) {
+            // Best effort: do not leave a stray temp file behind.
+            let _ = fs::remove_file(&tmp);
+            return Err(ConfigError::Io(e));
+        }
         Ok(())
     }
+}
+
+/// The sibling temp file a Save writes before renaming over `path`.
+/// Same directory as `path`, so the rename never crosses a filesystem.
+fn temp_path_for(path: &Path) -> PathBuf {
+    let mut name = path.file_name().unwrap_or_default().to_os_string();
+    name.push(".tmp");
+    path.with_file_name(name)
 }
 
 #[cfg(test)]
@@ -251,6 +268,31 @@ mod tests {
         let err = Config::load_from(&path).unwrap_err();
 
         assert!(matches!(err, ConfigError::Parse(_)));
+    }
+
+    #[test]
+    fn save_replaces_existing_file_without_leaving_temp() {
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("config.toml");
+        fs::write(&path, "theme = \"light\"\n").unwrap();
+        let updated = Config {
+            theme: Theme::Dark,
+            ..Config::default()
+        };
+
+        updated.save_to(&path).unwrap();
+
+        assert_eq!(Config::load_from(&path).unwrap(), updated);
+        assert!(!temp_path_for(&path).exists());
+    }
+
+    #[test]
+    fn temp_path_is_a_sibling_of_the_target() {
+        let path = Path::new("dir").join("config.toml");
+        assert_eq!(
+            temp_path_for(&path),
+            Path::new("dir").join("config.toml.tmp")
+        );
     }
 
     #[test]

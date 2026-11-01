@@ -13,7 +13,7 @@ use limn_service::{Config, Theme};
 pub mod settings;
 pub mod shell;
 
-pub use settings::{SaveStatus, SettingsView};
+pub use settings::{SaveStatus, SettingsView, TextField, MAX_FONT_SIZE, MIN_FONT_SIZE};
 pub use shell::{ActiveView, Shell};
 
 /// Read-only view of a parsed Markdown document. An editing-capable

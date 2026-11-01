@@ -41,8 +41,11 @@ fn nested_headings_keep_their_levels() {
 
 #[test]
 fn empty_input_yields_no_blocks() {
-    assert!(markdown::parse("").is_empty());
-    assert!(markdown::parse("\n\n\n").is_empty());
+    assert_eq!(markdown::parse(""), [] as [limn_core::block::Block; 0]);
+    assert_eq!(
+        markdown::parse("\n\n\n"),
+        [] as [limn_core::block::Block; 0]
+    );
 }
 
 #[test]

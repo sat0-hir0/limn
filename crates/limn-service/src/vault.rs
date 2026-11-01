@@ -1,8 +1,9 @@
 //! Vault: I/O against a folder full of `.md` files.
 //!
 //! Currently provides the read path: open a directory, find a Markdown
-//! file, and hand it to `limn_core::markdown::parse`. The write path is
-//! not yet implemented.
+//! file, list every Markdown file for the palette's file search, and
+//! hand a file to `limn_core::markdown::parse`. The write path is not
+//! yet implemented.
 
 use std::fs;
 use std::io;
@@ -79,6 +80,43 @@ impl Vault {
         Self::open_path(&path)
     }
 
+    /// List every `.md` file under `self.root`, recursively, as paths
+    /// relative to the root, sorted. Hidden entries (names starting
+    /// with `.`, e.g. `.git` / `.obsidian`) are skipped. Unreadable
+    /// subdirectories are skipped rather than failing the whole walk.
+    ///
+    /// This touches the filesystem; call it off the UI thread.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`OpenError::Io`] if the root itself can't be read.
+    pub fn list_md_files(&self) -> Result<Vec<PathBuf>, OpenError> {
+        let mut out = Vec::new();
+        let mut stack = vec![fs::read_dir(&self.root)?];
+        while let Some(entries) = stack.pop() {
+            for entry in entries.filter_map(Result::ok) {
+                if entry.file_name().to_string_lossy().starts_with('.') {
+                    continue;
+                }
+                let path = entry.path();
+                let Ok(file_type) = entry.file_type() else {
+                    continue;
+                };
+                if file_type.is_dir() {
+                    if let Ok(sub) = fs::read_dir(&path) {
+                        stack.push(sub);
+                    }
+                } else if is_md(&path) {
+                    if let Ok(rel) = path.strip_prefix(&self.root) {
+                        out.push(rel.to_path_buf());
+                    }
+                }
+            }
+        }
+        out.sort();
+        Ok(out)
+    }
+
     /// Read and parse a specific `.md` path.
     ///
     /// # Errors
@@ -97,7 +135,7 @@ fn first_md_in_dir(dir: &Path) -> Result<PathBuf, OpenError> {
     let mut entries: Vec<PathBuf> = fs::read_dir(dir)?
         .filter_map(Result::ok)
         .map(|e| e.path())
-        .filter(|p| p.is_file() && p.extension().and_then(|e| e.to_str()) == Some("md"))
+        .filter(|p| p.is_file() && is_md(p))
         .collect();
     entries.sort();
     entries
@@ -106,4 +144,8 @@ fn first_md_in_dir(dir: &Path) -> Result<PathBuf, OpenError> {
         .ok_or_else(|| OpenError::NoMarkdownFile {
             dir: dir.to_path_buf(),
         })
+}
+
+fn is_md(path: &Path) -> bool {
+    path.extension().and_then(|e| e.to_str()) == Some("md")
 }

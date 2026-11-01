@@ -3293,6 +3293,7 @@ dependencies = [
  "gpui_platform",
  "limn-core",
  "limn-service",
+ "tempfile",
 ]
 
 [[package]]

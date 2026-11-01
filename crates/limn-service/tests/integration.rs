@@ -91,3 +91,35 @@ fn given_a_missing_path_when_open_path_then_io_error() {
 
     assert!(matches!(err, OpenError::Io(_)));
 }
+
+#[test]
+fn given_nested_md_files_when_listing_then_relative_sorted_paths_without_hidden_dirs() {
+    let dir = tempdir().unwrap();
+    fs::create_dir_all(dir.path().join("notes/daily")).unwrap();
+    fs::create_dir_all(dir.path().join(".obsidian")).unwrap();
+    fs::write(dir.path().join("zeta.md"), "").unwrap();
+    fs::write(dir.path().join("notes/alpha.md"), "").unwrap();
+    fs::write(dir.path().join("notes/daily/2026-11-01.md"), "").unwrap();
+    fs::write(dir.path().join("notes/readme.txt"), "").unwrap();
+    fs::write(dir.path().join(".obsidian/hidden.md"), "").unwrap();
+
+    let files = Vault::new(dir.path()).list_md_files().unwrap();
+
+    let expected: Vec<std::path::PathBuf> = vec![
+        ["notes", "alpha.md"].iter().collect(),
+        ["notes", "daily", "2026-11-01.md"].iter().collect(),
+        "zeta.md".into(),
+    ];
+    assert_eq!(files, expected);
+}
+
+#[test]
+fn given_a_missing_root_when_listing_then_io_error() {
+    let dir = tempdir().unwrap();
+
+    let err = Vault::new(dir.path().join("nope"))
+        .list_md_files()
+        .unwrap_err();
+
+    assert!(matches!(err, OpenError::Io(_)));
+}

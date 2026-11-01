@@ -1,11 +1,12 @@
 //! Vault: I/O against a folder full of `.md` files.
 //!
-//! Currently provides the read path: open a directory, find a Markdown
-//! file, and hand it to `limn_core::markdown::parse`. The write path is
-//! not yet implemented.
+//! Read path: open a directory, find a Markdown file, and hand it to
+//! `limn_core::markdown::parse`. Write path: [`Vault::save_raw`] writes
+//! raw UTF-8 back through a temp file and an atomic rename, so an
+//! interrupted save never leaves a half-written `.md` behind.
 
 use std::fs;
-use std::io;
+use std::io::{self, Write};
 use std::path::{Path, PathBuf};
 
 use limn_core::block::Block;
@@ -91,6 +92,62 @@ impl Vault {
             blocks: markdown::parse(&text),
         })
     }
+
+    /// Read a `.md` path as raw UTF-8 text, without parsing it.
+    ///
+    /// This is the text the editor works on; [`Vault::save_raw`] writes
+    /// it back unchanged.
+    ///
+    /// # Errors
+    ///
+    /// Returns the underlying [`io::Error`] if the file can't be read
+    /// or isn't valid UTF-8.
+    pub fn open_path_raw(path: &Path) -> io::Result<String> {
+        fs::read_to_string(path)
+    }
+
+    /// Write `text` to `path` as raw UTF-8, replacing the file
+    /// atomically.
+    ///
+    /// The bytes go to a temp file in the same directory first, are
+    /// flushed to disk, and only then renamed over `path`. If anything
+    /// fails before the rename, the original file is left untouched
+    /// and the temp file is removed.
+    ///
+    /// # Errors
+    ///
+    /// Returns the underlying [`io::Error`] if the temp file can't be
+    /// written or the rename fails.
+    pub fn save_raw(path: &Path, text: &str) -> io::Result<()> {
+        let tmp = temp_path_for(path)?;
+        let result = write_synced(&tmp, text).and_then(|()| fs::rename(&tmp, path));
+        if result.is_err() {
+            // Best effort: the original error is the one worth reporting.
+            let _ = fs::remove_file(&tmp);
+        }
+        result
+    }
+}
+
+/// Sibling temp path for an atomic save of `path`. Lives in the same
+/// directory so the final rename never crosses a filesystem boundary.
+fn temp_path_for(path: &Path) -> io::Result<PathBuf> {
+    let name = path.file_name().ok_or_else(|| {
+        io::Error::new(
+            io::ErrorKind::InvalidInput,
+            format!("not a file path: {}", path.display()),
+        )
+    })?;
+    let mut tmp_name = std::ffi::OsString::from(".");
+    tmp_name.push(name);
+    tmp_name.push(format!(".limn-tmp-{}", std::process::id()));
+    Ok(path.with_file_name(tmp_name))
+}
+
+fn write_synced(path: &Path, text: &str) -> io::Result<()> {
+    let mut file = fs::File::create(path)?;
+    file.write_all(text.as_bytes())?;
+    file.sync_all()
 }
 
 fn first_md_in_dir(dir: &Path) -> Result<PathBuf, OpenError> {

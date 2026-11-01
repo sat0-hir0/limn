@@ -91,3 +91,50 @@ fn given_a_missing_path_when_open_path_then_io_error() {
 
     assert!(matches!(err, OpenError::Io(_)));
 }
+
+#[test]
+fn given_an_existing_md_when_save_raw_then_contents_are_replaced() {
+    let dir = tempdir().unwrap();
+    let path = dir.path().join("note.md");
+    fs::write(&path, "# Old\n").unwrap();
+
+    Vault::save_raw(&path, "# New\n\nbody 日本語\n").unwrap();
+
+    assert_eq!(
+        Vault::open_path_raw(&path).unwrap(),
+        "# New\n\nbody 日本語\n"
+    );
+}
+
+#[test]
+fn given_a_save_when_it_completes_then_no_temp_file_is_left_behind() {
+    let dir = tempdir().unwrap();
+    let path = dir.path().join("note.md");
+    fs::write(&path, "before\n").unwrap();
+
+    Vault::save_raw(&path, "after\n").unwrap();
+
+    let names: Vec<_> = fs::read_dir(dir.path())
+        .unwrap()
+        .map(|e| e.unwrap().file_name())
+        .collect();
+    assert_eq!(names, vec![std::ffi::OsString::from("note.md")]);
+}
+
+#[test]
+fn given_a_missing_directory_when_save_raw_then_error_and_nothing_created() {
+    let dir = tempdir().unwrap();
+    let path = dir.path().join("no-such-dir").join("note.md");
+
+    let err = Vault::save_raw(&path, "text").unwrap_err();
+
+    assert_eq!(err.kind(), std::io::ErrorKind::NotFound);
+    assert!(!path.exists());
+}
+
+#[test]
+fn given_a_path_without_a_file_name_when_save_raw_then_invalid_input() {
+    let err = Vault::save_raw(std::path::Path::new(".."), "text").unwrap_err();
+
+    assert_eq!(err.kind(), std::io::ErrorKind::InvalidInput);
+}

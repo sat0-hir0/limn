@@ -3,6 +3,10 @@
 //! Splitting this out of `main.rs` lets tests construct `DocumentView`
 //! directly via `TestAppContext`.
 
+pub mod autosave;
+
+pub use autosave::{Autosave, AUTOSAVE_DEBOUNCE};
+
 use gpui::{div, rgb, Context, IntoElement, ParentElement, Render, SharedString, Styled, Window};
 
 use limn_core::block::{Block, BlockKind};

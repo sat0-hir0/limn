@@ -18,6 +18,9 @@ gpui_platform = { workspace = true }
 # Need the `test-support` feature so `#[gpui::test]` resolves
 # `TestAppContext` and the `run_test` helper.
 gpui = { workspace = true, features = ["test-support"] }
+# Settings-save round-trip tests write config to a tempfile, never the
+# real config path.
+tempfile = "3"
 
 [lib]
 path = "src/lib.rs"

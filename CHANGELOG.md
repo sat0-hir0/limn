@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.1](https://github.com/sat0-hir0/limn/compare/v0.1.0...v0.1.1) (2026-11-04)
+
+
+### Features
+
+* initial public release (v0.1.0) ([b92b852](https://github.com/sat0-hir0/limn/commit/b92b8521e6b4d0f27fff6ef0de1dc6ec22cf73e3))
+* **ui:** add shell layer with centralized shortcut dispatcher ([#25](https://github.com/sat0-hir0/limn/issues/25)) ([3488fa8](https://github.com/sat0-hir0/limn/commit/3488fa8f15d19326b8edb4ed6eeacffa60464e94))
+
+
+### Bug Fixes
+
+* resolve new RustSec advisories and Rust 1.99 clippy lints ([#24](https://github.com/sat0-hir0/limn/issues/24)) ([2fb2cc9](https://github.com/sat0-hir0/limn/commit/2fb2cc9adb0ef5a3a73ee4fd30a84d268457883a))
+
 ## [0.1.0] - 2026-06-21
 
 ### Added

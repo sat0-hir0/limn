@@ -1,19 +1,23 @@
 //! Limn UI bin.
 //!
-//! Boots a gpui application, opens a single window, and renders each
-//! block as a row. With no argument it shows the embedded Welcome
-//! document (VS Code's welcome tab equivalent); with a path it loads
-//! that `.md` via `limn-service`. Read-only; editing is not yet
+//! Boots a gpui application and opens a single window whose root view
+//! is `Shell`. With no argument it shows the embedded Welcome document
+//! (VS Code's welcome tab equivalent); with a path it loads that `.md`
+//! via `limn-service`. `Shell` owns which top-level view (editor,
+//! palette, settings) is on screen and switches between them on the
+//! shortcuts in `limn_ui::shell::SHORTCUTS`. Editing is not yet
 //! implemented.
 
 use std::path::{Path, PathBuf};
 
-use gpui::{px, size, App, AppContext, Bounds, SharedString, WindowBounds, WindowOptions};
+use gpui::{
+    px, size, App, AppContext, Bounds, Focusable, SharedString, WindowBounds, WindowOptions,
+};
 use gpui_platform::application;
 
 use limn_core::markdown;
 use limn_service::{Document, Vault};
-use limn_ui::DocumentView;
+use limn_ui::shell::{self, Shell};
 
 const WELCOME_MD: &str = include_str!("welcome.md");
 const WELCOME_TITLE: &str = "Welcome";
@@ -42,17 +46,18 @@ fn main() {
     let blocks = document.blocks;
 
     application().run(move |cx: &mut App| {
+        cx.bind_keys(shell::key_bindings());
+
         let bounds = Bounds::centered(None, size(px(900.0), px(700.0)), cx);
         cx.open_window(
             WindowOptions {
                 window_bounds: Some(WindowBounds::Windowed(bounds)),
                 ..Default::default()
             },
-            |_, cx| {
-                cx.new(|_| DocumentView {
-                    title: title.clone(),
-                    blocks: blocks.clone(),
-                })
+            |window, cx| {
+                let shell = cx.new(|cx| Shell::new(title, blocks, cx));
+                shell.focus_handle(cx).focus(window, cx);
+                shell
             },
         )
         .expect("opening the main window should succeed"); // limn:allow-panic: window creation failure is unrecoverable at startup

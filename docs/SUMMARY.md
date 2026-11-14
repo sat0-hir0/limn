@@ -25,6 +25,7 @@
   - [ADR-0003: Temporarily Accept GPL Contamination](adr/0003-temporarily-accept-gpl-contamination.md)
   - [ADR-0004: Scope `.skillshare/` skills to OSS operating procedures](adr/0004-scope-skillshare-to-oss-operations.md)
   - [ADR-0005: Own View Switching in a Shell Root View](adr/0005-own-view-switching-in-a-shell-root-view.md)
+  - [ADR-0006: Provide read-only and editing as separate views gated by a feature flag](adr/0006-separate-view-for-editing.md)
 
 ---
 

@@ -14,7 +14,7 @@ use gpui::{
 
 use limn_core::block::Block;
 
-use crate::DocumentView;
+use crate::{DocumentView, EditorView};
 
 actions!(limn, [ShowPalette, ShowSettings, ShowEditor]);
 
@@ -68,11 +68,13 @@ pub fn key_bindings() -> Vec<KeyBinding> {
     SHORTCUTS.iter().map(binding).collect()
 }
 
-/// The window's root view. Owns the current [`ShellView`] and the one
-/// [`DocumentView`] entity the editor view renders.
+/// The window's root view. Owns the current [`ShellView`], the one
+/// [`DocumentView`] entity the editor slot renders read-only, and —
+/// when editing is enabled — the [`EditorView`] that replaces it.
 pub struct Shell {
     pub view: ShellView,
     pub document: Entity<DocumentView>,
+    pub editor: Option<Entity<EditorView>>,
     focus_handle: FocusHandle,
 }
 
@@ -82,7 +84,35 @@ impl Shell {
         Self {
             view: ShellView::Editor,
             document: cx.new(|_| DocumentView { title, blocks }),
+            editor: None,
             focus_handle: cx.focus_handle(),
+        }
+    }
+
+    /// Like [`Shell::new`], but the editor slot shows an editable
+    /// [`EditorView`] seeded with `text` instead of the read-only
+    /// [`DocumentView`] (ADR-0006, gated by `LIMN_FEAT_EDIT`).
+    #[must_use]
+    pub fn with_editor(
+        title: SharedString,
+        blocks: Vec<Block>,
+        text: String,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+    ) -> Self {
+        let editor = cx.new(|cx| EditorView::new(title.clone(), text, window, cx));
+        let mut shell = Self::new(title, blocks, cx);
+        shell.editor = Some(editor);
+        shell
+    }
+
+    /// Focus the element keystrokes should reach first: the editor's
+    /// input when editing is enabled, otherwise `Shell` itself. Either
+    /// way `Shell` stays on the focus path, so its shortcuts still fire.
+    pub fn focus_initial(&self, window: &mut Window, cx: &mut App) {
+        match &self.editor {
+            Some(editor) => editor.focus_handle(cx).focus(window, cx),
+            None => self.focus_handle.focus(window, cx),
         }
     }
 
@@ -115,7 +145,10 @@ impl Render for Shell {
             .track_focus(&self.focus_handle)
             .size_full()
             .child(match self.view {
-                ShellView::Editor => self.document.clone().into_any_element(),
+                ShellView::Editor => match &self.editor {
+                    Some(editor) => editor.clone().into_any_element(),
+                    None => self.document.clone().into_any_element(),
+                },
                 ShellView::Palette => placeholder("Command Palette").into_any_element(),
                 ShellView::Settings => placeholder("Settings").into_any_element(),
             })

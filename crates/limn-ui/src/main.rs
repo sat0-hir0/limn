@@ -5,19 +5,20 @@
 //! (VS Code's welcome tab equivalent); with a path it loads that `.md`
 //! via `limn-service`. `Shell` owns which top-level view (editor,
 //! palette, settings) is on screen and switches between them on the
-//! shortcuts in `limn_ui::shell::SHORTCUTS`. Editing is not yet
-//! implemented.
+//! shortcuts in `limn_ui::shell::SHORTCUTS`. The editor slot is
+//! read-only unless `LIMN_FEAT_EDIT` is set, in which case it is
+//! editable (ADR-0006).
 
 use std::path::{Path, PathBuf};
 
-use gpui::{
-    px, size, App, AppContext, Bounds, Focusable, SharedString, WindowBounds, WindowOptions,
-};
+use gpui::{px, size, App, AppContext, Bounds, SharedString, WindowBounds, WindowOptions};
+use gpui_component::Root;
 use gpui_platform::application;
 
 use limn_core::markdown;
 use limn_service::{Document, Vault};
 use limn_ui::shell::{self, Shell};
+use limn_ui::FeatureFlags;
 
 const WELCOME_MD: &str = include_str!("welcome.md");
 const WELCOME_TITLE: &str = "Welcome";
@@ -43,9 +44,12 @@ fn main() {
         .and_then(|n| n.to_str())
         .map_or_else(|| "(unnamed)".to_string(), String::from)
         .into();
+    let text = document.text;
     let blocks = document.blocks;
+    let flags = FeatureFlags::from_env();
 
     application().run(move |cx: &mut App| {
+        gpui_component::init(cx);
         cx.bind_keys(shell::key_bindings());
 
         let bounds = Bounds::centered(None, size(px(900.0), px(700.0)), cx);
@@ -55,9 +59,15 @@ fn main() {
                 ..Default::default()
             },
             |window, cx| {
-                let shell = cx.new(|cx| Shell::new(title, blocks, cx));
-                shell.focus_handle(cx).focus(window, cx);
-                shell
+                let shell = cx.new(|cx| {
+                    if flags.edit {
+                        Shell::with_editor(title, blocks, text, window, cx)
+                    } else {
+                        Shell::new(title, blocks, cx)
+                    }
+                });
+                shell.update(cx, |shell, cx| shell.focus_initial(window, cx));
+                cx.new(|cx| Root::new(shell, window, cx))
             },
         )
         .expect("opening the main window should succeed"); // limn:allow-panic: window creation failure is unrecoverable at startup
@@ -81,5 +91,6 @@ fn welcome_document() -> Document {
     Document {
         path: PathBuf::from(WELCOME_TITLE),
         blocks: markdown::parse(&body),
+        text: body,
     }
 }

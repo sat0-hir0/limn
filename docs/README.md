@@ -55,3 +55,4 @@ See [`docs/adr/README.md`](adr/README.md) for details.
 | ADR-0003 | Temporarily accept GPL contamination | Accepted |
 | ADR-0004 | Scope `.skillshare/` skills to OSS operating procedures | Accepted |
 | ADR-0005 | Own view switching in a shell root view | Proposed |
+| ADR-0006 | Provide read-only and editing as separate views gated by a feature flag | Proposed |

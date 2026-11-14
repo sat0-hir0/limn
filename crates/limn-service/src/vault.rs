@@ -16,6 +16,10 @@ use limn_core::markdown;
 pub struct Document {
     pub path: PathBuf,
     pub blocks: Vec<Block>,
+    /// Raw file contents, kept alongside the parsed blocks so an editor
+    /// can be seeded with real text — `limn_core::markdown::serialize`
+    /// does not yet turn a block tree back into Markdown.
+    pub text: String,
 }
 
 /// Root of a vault — a directory full of `.md` files.
@@ -89,6 +93,7 @@ impl Vault {
         Ok(Document {
             path: path.to_path_buf(),
             blocks: markdown::parse(&text),
+            text,
         })
     }
 }

@@ -64,7 +64,7 @@ meaningful.
 - **What**: Added `gpui-component` as a runtime dependency of
   `limn-ui`. `EditorView` uses its `InputState` for text entry, IME,
   cursor movement, selection, clipboard, and undo/redo (see
-  [ADR-0001](../adr/0001-adopt-gpui.md), [ADR-0005](../adr/0005-separate-view-for-editing.md)).
+  [ADR-0001](../adr/0001-adopt-gpui.md), [ADR-0006](../adr/0006-separate-view-for-editing.md)).
   `external-deps` moved from 4 to 5 in `baseline.json`.
 - **Resolution condition**: None. `gpui-component` is a permanent
   dependency of the editing feature, not a shortcut to unwind.

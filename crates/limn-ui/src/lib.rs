@@ -4,14 +4,15 @@
 //! and `EditorView` directly via `TestAppContext`.
 
 use gpui::{
-    div, rgb, AppContext as _, Context, Entity, IntoElement, ParentElement, Render, SharedString,
-    Styled, Subscription, Window,
+    div, rgb, App, AppContext as _, Context, Entity, FocusHandle, Focusable, IntoElement,
+    ParentElement, Render, SharedString, Styled, Subscription, Window,
 };
 use gpui_component::input::{Input, InputEvent, InputState};
 
 use limn_core::block::{Block, BlockKind};
 
 pub mod feature_flags;
+pub mod shell;
 
 pub use feature_flags::FeatureFlags;
 
@@ -88,8 +89,16 @@ impl EditorView {
 
     /// The editor's current text, read straight from `InputState`.
     #[must_use]
-    pub fn value(&self, cx: &gpui::App) -> SharedString {
+    pub fn value(&self, cx: &App) -> SharedString {
         self.input.read(cx).value()
+    }
+}
+
+impl Focusable for EditorView {
+    /// The editor's focus is the input's: focusing the view puts the
+    /// caret in the text field.
+    fn focus_handle(&self, cx: &App) -> FocusHandle {
+        self.input.read(cx).focus_handle(cx)
     }
 }
 

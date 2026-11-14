@@ -1,4 +1,4 @@
-# ADR-0005: Provide read-only and editing as separate views gated by a feature flag
+# ADR-0006: Provide read-only and editing as separate views gated by a feature flag
 
 - **Status**: Proposed
 - **Date**: 2026-07-07
@@ -33,11 +33,14 @@ We keep `DocumentView` (read-only) and `EditorView` (editable) as two
 separate `gpui` view types, and switch between them at startup with
 the `edit` field of the `FeatureFlags` struct (`LIMN_FEAT_EDIT`,
 Stage 1 — see [flag-inventory.md](../development/flag-inventory.md)).
-When the flag is off, the window renders `DocumentView` from
-`Document.blocks`; when it is on, the window renders `EditorView`
-seeded from `Document.text`. Both are wrapped in `gpui_component`'s
-`Root` so the same initialization path (`gpui_component::init`) covers
-either branch.
+The choice lives in the editor slot of the `Shell` root view
+([ADR-0005](0005-own-view-switching-in-a-shell-root-view.md)): when the
+flag is off, that slot renders `DocumentView` from `Document.blocks`;
+when it is on, it renders `EditorView` seeded from `Document.text`.
+`Shell` itself is wrapped in `gpui_component`'s `Root` in both cases,
+so the same initialization path (`gpui_component::init`) covers either
+branch and the shell shortcuts keep working while the editor has
+focus.
 
 ---
 
@@ -92,6 +95,8 @@ either branch.
 
 - Related ADR: [ADR-0001](0001-adopt-gpui.md) (delegating input handling
   to `gpui-component`'s `InputState` is decided there, not here)
+- Related ADR: [ADR-0005](0005-own-view-switching-in-a-shell-root-view.md)
+  (the `Shell` root view whose editor slot this decision fills)
 - Reference: [feature-flags.md](../development/feature-flags.md)
 - Reference: [flag-inventory.md](../development/flag-inventory.md)
 - Reference: `ARCHITECTURE.md` Open Questions — IME Quality
